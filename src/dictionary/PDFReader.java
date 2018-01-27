@@ -1,7 +1,15 @@
 package dictionary;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.regex.PatternSyntaxException;
 
 import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -40,4 +48,102 @@ private static byte[] readFileAsBytes(String filePath) {
 		}
 	    return txt;
 	}
+	
+	static HashMap<String,ArrayList<Integer>> createDictionary(String file_name, String file_format, String file_path, List<String> words_one_book, HashMap<String,ArrayList<Integer>> wordAppearances) {
+		for (int i = 0; i < 10; i++){ 
+			file_name = file_path + i + file_format;
+		
+			try {
+			    String text = PDFReader.getText(new File(file_name));
+			    text = text.replaceAll("[^a-zA-Z \t\n'-]+","");
+			    text = text.toLowerCase(); 
+			    //^ Locale.ENGLISH
+			    try {
+			       //words = text.split("\\s+");
+			       words_one_book = Arrays.asList(text.split("\\s+"));
+			    } catch (PatternSyntaxException ex) {
+			        // 
+			    }
+			    for (String s : words_one_book) {
+			    	//s.toLowerCase();
+			    	//stem here
+			    	Stemmer stem = new Stemmer();
+			    	//s = stem.stem(s);
+			    	ArrayList<Integer> value = wordAppearances.get(s);
+				    if (value != null && !value.contains(i)) {
+				        value.add(i);
+				    } else {
+				    	value = new ArrayList<Integer>();
+				    	value.add(i);
+				    	wordAppearances.put(s, value);
+				    }
+			    }
+
+			} catch (IOException e) {
+			    e.printStackTrace();
+			}
+		
+		}
+		//sort here (not really needed tbh).
+		/*
+		TreeMap<String,ArrayList<Integer>> sortedMap = new TreeMap<>();
+		sortedMap.putAll(wordAppearances);
+		*/
+		return wordAppearances;
+	}
+/*	
+	static void outputToTxt(HashMap<String,ArrayList<Integer>> wordAppearances){
+	    FileWriter writer;
+		try {
+			writer = new FileWriter("output.txt");
+			StringBuilder sb = new StringBuilder();
+			
+			for (Map.Entry<String,ArrayList<Integer>> entry : wordAppearances.entrySet()) {
+			    //System.out.println(entry.getKey()+" : "+entry.getValue());
+			//}
+			//for (String key: wordAppearances.keySet()){
+				
+				//for (Integer s : wordAppearances.get(key)) {
+			    for (Integer s : entry.getValue()){
+				    sb.append(s);
+				    sb.append("\t");
+				}
+
+	    		writer.write(entry.getKey() + " : " + sb.toString() + System.lineSeparator());
+	    		sb.setLength(0);
+	    }
+	    writer.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println("Job done, bois.");
+	}
+*/	
+	static void outputToTxt(HashMap<String,ArrayList<Integer>> wordAppearances){
+	    FileWriter writer;
+		try {
+			writer = new FileWriter("output.txt");
+			StringBuilder sb = new StringBuilder();
+			
+			TreeMap<String,ArrayList<Integer>> sortedMap = new TreeMap<>();
+			sortedMap.putAll(wordAppearances);
+
+			for (Map.Entry<String,ArrayList<Integer>> entry : sortedMap.entrySet()) {
+			    for (Integer s : entry.getValue()){
+				    sb.append(s);
+				    sb.append("\t");
+				}
+
+	    		writer.write(entry.getKey() + " : " + sb.toString() + System.lineSeparator());
+	    		sb.setLength(0);
+	    }
+	    writer.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println("Job done, bois.");
+	}
+
 }

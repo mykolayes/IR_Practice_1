@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -22,32 +23,13 @@ import dictionary.PDFReader;
 
 public class tester {
 	static String file_name = "", file_format = ".pdf", file_path = "src/books/";
-	//static String[] words;
 	static List<String> words_one_book;
-	static ArrayList<String> words = new ArrayList<String>();
+	//static ArrayList<String> words = new ArrayList<String>();
+	
+	static HashMap<String,ArrayList<Integer>> wordAppearances = new HashMap<String,ArrayList<Integer>>();
+/*
 	public static void main(String[] args) {
-		for (int i = 0; i < 10; i++){ //< 10
-			file_name = file_path + i + file_format;
-		
-			try {
-			    String text = PDFReader.getText(new File(file_name));
-			    //text = text.replace(".", "");
-			    text = text.replaceAll("[^a-zA-Z ]+","");
-			    text.toLowerCase(); //Locale.ENGLISH
-			    try {
-			       //words = text.split("\\s+");
-			       words_one_book = Arrays.asList(text.split("\\s+"));
-			    } catch (PatternSyntaxException ex) {
-			        // 
-			    }
-			    words.addAll(words_one_book);
-			    System.out.println("");
-			    //System.out.println("Text in PDF: " + text);
-			} catch (IOException e) {
-			    e.printStackTrace();
-			}
-		
-		}
+		words = PDFReader.createDictionary(file_name,  file_format,  file_path,  words_one_book,  words);
 		Set<String> set = new HashSet<>();
 		set.addAll(words);
 		words = new ArrayList<String>();
@@ -56,20 +38,18 @@ public class tester {
 		//Set<String> set = new HashSet<String>(Arrays.asList(words));
 		//words = set.toArray(new String[set.size()]);
 		//Arrays.sort(words);
-	    System.out.println("");
-	    
-	    FileWriter writer;
-		try {
-			writer = new FileWriter("output.txt");
-	    //for(String str: words) {
-	    	for (int i = 0; i < words.size(); i ++){
-	      writer.write(i + " " + words.get(i) + System.lineSeparator());
-	    }
-	    writer.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
+	    //System.out.println("");
+		PDFReader.outputToTxt(words);
+	}
+*/
+	public static void main(String[] args) {
+		wordAppearances = PDFReader.createDictionary(file_name,  file_format,  file_path,  words_one_book,  wordAppearances);
+//		Set<String> set = new HashSet<>();
+//		set.addAll(wordAppearances);
+//		wordAppearances = new ArrayList<String>();
+//		wordAppearances.addAll(set);
+//		Collections.sort(wordAppearances);
+		PDFReader.outputToTxt(wordAppearances);
 	}
 
 }
