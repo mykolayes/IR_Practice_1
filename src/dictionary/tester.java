@@ -13,21 +13,7 @@ public class tester {
 	//static ArrayList<String> words = new ArrayList<String>();
 	
 	static HashMap<String,ArrayList<Integer>> wordAppearances = new HashMap<String,ArrayList<Integer>>();
-/*
-	public static void main(String[] args) {
-		words = PDFReader.createDictionary(file_name,  file_format,  file_path,  words_one_book,  words);
-		Set<String> set = new HashSet<>();
-		set.addAll(words);
-		words = new ArrayList<String>();
-		words.addAll(set);
-		Collections.sort(words);
-		//Set<String> set = new HashSet<String>(Arrays.asList(words));
-		//words = set.toArray(new String[set.size()]);
-		//Arrays.sort(words);
-	    //System.out.println("");
-		PDFReader.outputToTxt(words);
-	}
-*/
+
 	public static void main(String[] args) {
 		wordAppearances = PDFReader.createDictionary(file_name,  file_format,  file_path,  words_one_book,  wordAppearances);
 		
