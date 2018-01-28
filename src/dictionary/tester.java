@@ -45,26 +45,49 @@ public class tester {
 */
 	public static void main(String[] args) {
 		wordAppearances = PDFReader.createDictionary(file_name,  file_format,  file_path,  words_one_book,  wordAppearances);
-//		Set<String> set = new HashSet<>();
-//		set.addAll(wordAppearances);
-//		wordAppearances = new ArrayList<String>();
-//		wordAppearances.addAll(set);
-//		Collections.sort(wordAppearances);
+		
+		PDFReader.outputToTxt(wordAppearances);
+		System.out.println("Output file created and filled.");
+		
 		Scanner scan = new Scanner(System.in);
 		System.out.println("Enter a word to be found: ");
-		String toBeFound = scan.next(); //e.g. "episode"
-		//PDFReader.Find(wordAppearances, toBeFound);
+		String toBeFound = scan.next(); //e.g. "episode/affectionate"
 		ArrayList<Integer> foundIn = PDFReader.Find(wordAppearances, toBeFound);
-		if (foundIn != null){
+		if (!foundIn.isEmpty()){
 			System.out.println("Given word was found in following documents: " + foundIn);
 		}
 		else {
 			System.out.println("Given word was not found.");
 		}
-		/*
-		PDFReader.outputToTxt(wordAppearances);
-		System.out.println("Job done, bois.");
-		*/
+
+		scan = new Scanner(System.in);
+		System.out.println(" ~'AND'~ Enter a first word to be found: ");
+		String toBeFoundOne = scan.next(); //e.g. "affection"
+		scan = new Scanner(System.in);
+		System.out.println(" ~'AND'~ Enter a second word to be found: ");
+		String toBeFoundTwo = scan.next(); //e.g. "assign"
+		foundIn = PDFReader.And(wordAppearances, toBeFoundOne, toBeFoundTwo);
+		if (!foundIn.isEmpty()){
+			System.out.println("Given words were found in following documents: " + foundIn);
+		}
+		else {
+			System.out.println("Given words were not found.");
+		}
+		
+		scan = new Scanner(System.in);
+		System.out.println(" ~'OR'~ Enter a first word to be found: ");
+		toBeFoundOne = scan.next(); //e.g. "august"
+		scan = new Scanner(System.in);
+		System.out.println(" ~'OR'~ Enter a second word to be found: ");
+		toBeFoundTwo = scan.next(); //e.g. "augment"
+		foundIn = PDFReader.Or(wordAppearances, toBeFoundOne, toBeFoundTwo);
+		if (!foundIn.isEmpty()){
+			System.out.println("Given words were found in following documents: " + foundIn);
+		}
+		else {
+			System.out.println("Given words were not found.");
+		}
+		
 	}
 
 }

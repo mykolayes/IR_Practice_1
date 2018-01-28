@@ -3,6 +3,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -18,6 +20,7 @@ import org.apache.pdfbox.text.PDFTextStripper;
 
 
 public class PDFReader {
+	static int numOfDocs;
 	/*
 	public static String convertPDFToTxt(String filePath) {
         byte[] thePDFFileBytes = readFileAsBytes(filePath);
@@ -51,6 +54,7 @@ private static byte[] readFileAsBytes(String filePath) {
 	}
 	
 	static HashMap<String,ArrayList<Integer>> createDictionary(String file_name, String file_format, String file_path, List<String> words_one_book, HashMap<String,ArrayList<Integer>> wordAppearances) {
+		//Files.list(Paths.get("your/path/here")).count();
 		for (int i = 0; i < 10; i++){ 
 			file_name = file_path + i + file_format;
 		
