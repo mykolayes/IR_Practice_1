@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -124,6 +125,62 @@ private static byte[] readFileAsBytes(String filePath) {
 		System.out.println("Job done, bois.");
 	}
 */	
+	static ArrayList<Integer> And(HashMap<String,ArrayList<Integer>> wordAppearances, String one, String two){
+		ArrayList<Integer> res = new ArrayList<Integer>();
+		
+		ArrayList<Integer> resOne = Find(wordAppearances, one);
+		ArrayList<Integer> resTwo = Find(wordAppearances, two);
+		if (!resOne.isEmpty() && !resTwo.isEmpty()){
+		//void findDupes(int[] a, int[] b) {
+		    HashSet<Integer> matches = new HashSet<Integer>();
+		    for (Integer i : resOne)
+		    	matches.add(i);
+		    for (Integer i : resTwo) {
+		        if (matches.contains(i))
+		        	res.add(i);   
+		    }
+		}
+		return res;	
+	}
+	
+	static ArrayList<Integer> Or(HashMap<String,ArrayList<Integer>> wordAppearances, String one, String two){
+		ArrayList<Integer> res = new ArrayList<Integer>();
+		
+		ArrayList<Integer> resOne = Find(wordAppearances, one);
+		ArrayList<Integer> resTwo = Find(wordAppearances, two);
+		if (!resOne.isEmpty() || !resTwo.isEmpty()){
+		//void findDupes(int[] a, int[] b) {
+		    HashSet<Integer> matches = new HashSet<Integer>();
+		    for (Integer i : resOne)
+		    	matches.add(i);
+		    for (Integer i : resTwo) 
+		    	matches.add(i);
+		    
+		    for (Integer i : matches){
+		    	res.add(i);
+		    }
+		}
+		return res;	
+	}
+	
+	//
+	static ArrayList<Integer> Find(HashMap<String,ArrayList<Integer>> wordAppearances, String key){
+    	Stemmer stmmr = new Stemmer();
+    	char[] s_arr = key.toCharArray();
+    	int s_length = key.length();
+    	stmmr.add(s_arr, s_length);
+    	stmmr.stem();
+    	key = stmmr.toString();
+
+		ArrayList<Integer> res = wordAppearances.get(key);
+		
+		if (res == null){
+			res = new ArrayList<Integer>();
+		}
+		
+		
+		return res;		
+	}
 	static void outputToTxt(HashMap<String,ArrayList<Integer>> wordAppearances){
 	    FileWriter writer;
 		try {

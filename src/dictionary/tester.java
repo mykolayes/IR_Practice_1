@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.regex.PatternSyntaxException;
 
@@ -49,8 +50,21 @@ public class tester {
 //		wordAppearances = new ArrayList<String>();
 //		wordAppearances.addAll(set);
 //		Collections.sort(wordAppearances);
+		Scanner scan = new Scanner(System.in);
+		System.out.println("Enter a word to be found: ");
+		String toBeFound = scan.next(); //e.g. "episode"
+		//PDFReader.Find(wordAppearances, toBeFound);
+		ArrayList<Integer> foundIn = PDFReader.Find(wordAppearances, toBeFound);
+		if (foundIn != null){
+			System.out.println("Given word was found in following documents: " + foundIn);
+		}
+		else {
+			System.out.println("Given word was not found.");
+		}
+		/*
 		PDFReader.outputToTxt(wordAppearances);
 		System.out.println("Job done, bois.");
+		*/
 	}
 
 }
