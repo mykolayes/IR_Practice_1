@@ -67,8 +67,12 @@ private static byte[] readFileAsBytes(String filePath) {
 			    for (String s : words_one_book) {
 			    	//s.toLowerCase();
 			    	//stem here
-			    	Stemmer stem = new Stemmer();
-			    	//s = stem.stem(s);
+			    	Stemmer stmmr = new Stemmer();
+			    	char[] s_arr = s.toCharArray();
+			    	int s_length = s.length();
+			    	stmmr.add(s_arr, s_length);
+			    	stmmr.stem();
+			    	s = stmmr.toString();
 			    	ArrayList<Integer> value = wordAppearances.get(s);
 				    if (value != null && !value.contains(i)) {
 				        value.add(i);
@@ -143,7 +147,7 @@ private static byte[] readFileAsBytes(String filePath) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		System.out.println("Job done, bois.");
+		//System.out.println("Job done, bois.");
 	}
 
 }

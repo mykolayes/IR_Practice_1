@@ -50,6 +50,7 @@ public class tester {
 //		wordAppearances.addAll(set);
 //		Collections.sort(wordAppearances);
 		PDFReader.outputToTxt(wordAppearances);
+		System.out.println("Job done, bois.");
 	}
 
 }
