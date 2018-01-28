@@ -1,3 +1,4 @@
+/*Yeshchenko Mykola, FI-2*/
 package dictionary;
 import java.io.File;
 import java.io.FileInputStream;
@@ -54,8 +55,13 @@ private static byte[] readFileAsBytes(String filePath) {
 	}
 	
 	static HashMap<String,ArrayList<Integer>> createDictionary(String file_name, String file_format, String file_path, List<String> words_one_book, HashMap<String,ArrayList<Integer>> wordAppearances) {
-		//Files.list(Paths.get("your/path/here")).count();
-		for (int i = 0; i < 10; i++){ 
+		try {
+			numOfDocs = (int) Files.list(Paths.get(file_path)).count();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		for (int i = 0; i < numOfDocs; i++){ 
 			file_name = file_path + i + file_format;
 		
 			try {
@@ -135,7 +141,6 @@ private static byte[] readFileAsBytes(String filePath) {
 		ArrayList<Integer> resOne = Find(wordAppearances, one);
 		ArrayList<Integer> resTwo = Find(wordAppearances, two);
 		if (!resOne.isEmpty() && !resTwo.isEmpty()){
-		//void findDupes(int[] a, int[] b) {
 		    HashSet<Integer> matches = new HashSet<Integer>();
 		    for (Integer i : resOne)
 		    	matches.add(i);
@@ -153,7 +158,6 @@ private static byte[] readFileAsBytes(String filePath) {
 		ArrayList<Integer> resOne = Find(wordAppearances, one);
 		ArrayList<Integer> resTwo = Find(wordAppearances, two);
 		if (!resOne.isEmpty() || !resTwo.isEmpty()){
-		//void findDupes(int[] a, int[] b) {
 		    HashSet<Integer> matches = new HashSet<Integer>();
 		    for (Integer i : resOne)
 		    	matches.add(i);
@@ -167,7 +171,24 @@ private static byte[] readFileAsBytes(String filePath) {
 		return res;	
 	}
 	
-	//
+	static ArrayList<Integer> Not(HashMap<String,ArrayList<Integer>> wordAppearances, String one){
+		ArrayList<Integer> res = new ArrayList<Integer>();
+		
+		ArrayList<Integer> resOne = Find(wordAppearances, one);
+		if (!resOne.isEmpty()){
+			for (int i = 0; i < numOfDocs; i++){
+				if (!resOne.contains(i)) 
+					res.add(i);
+			}
+		}
+		else {
+			for (int i = 0; i < numOfDocs; i++){
+				res.add(i);
+			}
+		}
+		return res;	
+	}
+	
 	static ArrayList<Integer> Find(HashMap<String,ArrayList<Integer>> wordAppearances, String key){
     	Stemmer stmmr = new Stemmer();
     	char[] s_arr = key.toCharArray();

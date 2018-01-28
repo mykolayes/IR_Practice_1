@@ -1,24 +1,9 @@
+/*Yeshchenko Mykola, FI-2*/
 package dictionary;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Scanner;
-import java.util.Set;
-import java.util.regex.PatternSyntaxException;
-
-import org.apache.pdfbox.*;
-import org.apache.pdfbox.io.IOUtils;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
-
 import dictionary.PDFReader;
 
 
@@ -48,46 +33,58 @@ public class tester {
 		
 		PDFReader.outputToTxt(wordAppearances);
 		System.out.println("Output file created and filled.");
-		
-		Scanner scan = new Scanner(System.in);
-		System.out.println("Enter a word to be found: ");
-		String toBeFound = scan.next(); //e.g. "episode/affectionate"
-		ArrayList<Integer> foundIn = PDFReader.Find(wordAppearances, toBeFound);
-		if (!foundIn.isEmpty()){
-			System.out.println("Given word was found in following documents: " + foundIn);
+		try(Scanner scan = new Scanner(System.in)){		
+			System.out.println("Enter a word to be found: ");
+			String toBeFound = scan.next(); //e.g. "episode/affectionate"
+			 
+			ArrayList<Integer> foundIn = PDFReader.Find(wordAppearances, toBeFound);
+			if (!foundIn.isEmpty()){
+				System.out.println("Given word was found in following documents: " + foundIn);
+			}
+			else {
+				System.out.println("Given word was not found.");
+			}
+	
+			System.out.println("Enter a word to be found: ");
+			toBeFound = scan.next(); //e.g. "banker" - all but 7 and 9.
+			 
+			foundIn = PDFReader.Not(wordAppearances, toBeFound);
+			if (!foundIn.isEmpty()){
+				System.out.println("Given word was not found in following documents: " + foundIn);
+			}
+			else {
+				System.out.println("Given word was found in all the documents.");
+			}
+	
+			System.out.println(" ~'AND'~ Enter a first word to be found: ");
+			String toBeFoundOne = scan.next(); //e.g. "affection"
+			 
+			System.out.println(" ~'AND'~ Enter a second word to be found: ");
+			String toBeFoundTwo = scan.next(); //e.g. "assign"
+			 
+			foundIn = PDFReader.And(wordAppearances, toBeFoundOne, toBeFoundTwo);
+			if (!foundIn.isEmpty()){
+				System.out.println("Given words were found in following documents: " + foundIn);
+			}
+			else {
+				System.out.println("Given words were not found.");
+			}
+			
+			System.out.println(" ~'OR'~ Enter a first word to be found: ");
+			toBeFoundOne = scan.next(); //e.g. "august" - 3, 4
+			 
+			System.out.println(" ~'OR'~ Enter a second word to be found: ");
+			toBeFoundTwo = scan.next(); //e.g. "augment" - 5, 6, 7, 9
+			 
+			foundIn = PDFReader.Or(wordAppearances, toBeFoundOne, toBeFoundTwo);
+			if (!foundIn.isEmpty()){
+				System.out.println("Given words were found in following documents: " + foundIn);
+			}
+			else {
+				System.out.println("Given words were not found.");
+			}
 		}
-		else {
-			System.out.println("Given word was not found.");
-		}
-
-		scan = new Scanner(System.in);
-		System.out.println(" ~'AND'~ Enter a first word to be found: ");
-		String toBeFoundOne = scan.next(); //e.g. "affection"
-		scan = new Scanner(System.in);
-		System.out.println(" ~'AND'~ Enter a second word to be found: ");
-		String toBeFoundTwo = scan.next(); //e.g. "assign"
-		foundIn = PDFReader.And(wordAppearances, toBeFoundOne, toBeFoundTwo);
-		if (!foundIn.isEmpty()){
-			System.out.println("Given words were found in following documents: " + foundIn);
-		}
-		else {
-			System.out.println("Given words were not found.");
-		}
-		
-		scan = new Scanner(System.in);
-		System.out.println(" ~'OR'~ Enter a first word to be found: ");
-		toBeFoundOne = scan.next(); //e.g. "august"
-		scan = new Scanner(System.in);
-		System.out.println(" ~'OR'~ Enter a second word to be found: ");
-		toBeFoundTwo = scan.next(); //e.g. "augment"
-		foundIn = PDFReader.Or(wordAppearances, toBeFoundOne, toBeFoundTwo);
-		if (!foundIn.isEmpty()){
-			System.out.println("Given words were found in following documents: " + foundIn);
-		}
-		else {
-			System.out.println("Given words were not found.");
-		}
-		
+		System.out.println("End of the testing program. Thank you!");
 	}
 
 }

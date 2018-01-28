@@ -1,3 +1,4 @@
+/*Yeshchenko Mykola, FI-2*/
 /*
 package dictionary;
 
