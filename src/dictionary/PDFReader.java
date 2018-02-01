@@ -206,6 +206,26 @@ private static byte[] readFileAsBytes(String filePath) {
 		
 		return res;		
 	}
+	
+	static HashMap<String,ArrayList<Integer>> createMatrix(HashMap<String,ArrayList<Integer>> wordAppearances){
+		HashMap<String,ArrayList<Integer>> matrix = new HashMap<String,ArrayList<Integer>>(wordAppearances);
+		ArrayList<Integer> eachElKeys;
+			for (String key : matrix.keySet()){
+				eachElKeys = new ArrayList<Integer>(matrix.get(key));
+				matrix.get(key).clear();
+				for (int j = 0; j < numOfDocs; j++){
+					if (eachElKeys.contains(j)){
+						matrix.get(key).add(1);
+					}
+					else{
+						matrix.get(key).add(0);
+					}
+				}
+			}
+		
+		return matrix;	
+	}
+	
 	static void outputToTxt(HashMap<String,ArrayList<Integer>> wordAppearances){
 	    FileWriter writer;
 		try {

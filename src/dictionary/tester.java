@@ -13,10 +13,11 @@ public class tester {
 	//static ArrayList<String> words = new ArrayList<String>();
 	
 	static HashMap<String,ArrayList<Integer>> wordAppearances = new HashMap<String,ArrayList<Integer>>();
+	static HashMap<String,ArrayList<Integer>> wordAppearancesMatrix = new HashMap<String,ArrayList<Integer>>();
 
 	public static void main(String[] args) {
 		wordAppearances = PDFReader.createDictionary(file_name,  file_format,  file_path,  words_one_book,  wordAppearances);
-		
+		wordAppearancesMatrix = PDFReader.createMatrix(wordAppearances);
 		PDFReader.outputToTxt(wordAppearances);
 		System.out.println("Output file created and filled.");
 		try(Scanner scan = new Scanner(System.in)){		
