@@ -208,7 +208,13 @@ private static byte[] readFileAsBytes(String filePath) {
 	}
 	
 	static HashMap<String,ArrayList<Integer>> createMatrix(HashMap<String,ArrayList<Integer>> wordAppearances){
-		HashMap<String,ArrayList<Integer>> matrix = new HashMap<String,ArrayList<Integer>>(wordAppearances);
+		HashMap<String,ArrayList<Integer>> matrix = new HashMap<String,ArrayList<Integer>>();
+	    //HashMap<Integer, List<MySpecialClass>> copy = new HashMap<Integer, List<MySpecialClass>>();
+	    for (Map.Entry<String,ArrayList<Integer>> iter : wordAppearances.entrySet())
+	    {
+	    	matrix.put(iter.getKey(), new ArrayList<Integer>(iter.getValue()));
+	    }
+		//matrix.putAll(wordAppearances);
 		ArrayList<Integer> eachElKeys;
 			for (String key : matrix.keySet()){
 				eachElKeys = new ArrayList<Integer>(matrix.get(key));
