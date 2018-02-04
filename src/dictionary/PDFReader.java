@@ -55,7 +55,7 @@ private static byte[] readFileAsBytes(String filePath) {
 	    return txt;
 	}
 	
-	static TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> createDictionary(String file_name, String file_format, String file_path, List<String> words_one_book, TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances) {
+	static TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> createDictionaryPositional(String file_name, String file_format, String file_path, List<String> words_one_book, TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances) {
 		Integer wordsPosCounter;
 		try {
 			numOfDocs = (int) Files.list(Paths.get(file_path)).count();
@@ -116,7 +116,81 @@ private static byte[] readFileAsBytes(String filePath) {
 		return wordAppearances;
 	}
 	
-	static TreeMap<String,ArrayList<Integer>> createMatrix(TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances){
+	static TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> createDictionaryBiwords(String file_name, String file_format, String file_path, List<String> words_one_book, TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances) {
+		Integer wordsPosCounter;
+		try {
+			numOfDocs = (int) Files.list(Paths.get(file_path)).count();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		for (int i = 0; i < numOfDocs; i++){ 
+			file_name = file_path + i + file_format;
+			wordsPosCounter = 1;
+			try {
+			    String text = PDFReader.getText(new File(file_name));
+			    text = text.replaceAll("[^a-zA-Z ]+","");
+			    text = text.toLowerCase(); 
+			    //^ Locale.ENGLISH
+			    try {
+			       //words = text.split("\\s+");
+			       words_one_book = Arrays.asList(text.split("\\s+"));
+			    } catch (PatternSyntaxException ex) {
+			        // 
+			    }
+			    for (int j = 0; j < words_one_book.size()-1; j++){
+			    	//if (words_one_book.size() > j + 1){
+				    	
+				    //for (String s : words_one_book) {
+				    	//s.toLowerCase();
+				    	//stem here
+				    	String sOne = words_one_book.get(j);
+				    	String sTwo = words_one_book.get(j+1);
+				    	Stemmer stmmr = new Stemmer();
+				    	char[] s_arr = sOne.toCharArray();
+				    	int s_length = sOne.length();
+				    	stmmr.add(s_arr, s_length);
+				    	stmmr.stem();
+				    	sOne = stmmr.toString();
+				    	
+				    	s_arr = sTwo.toCharArray();
+				    	s_length = sTwo.length();
+				    	stmmr.add(s_arr, s_length);
+				    	stmmr.stem();
+				    	sTwo = stmmr.toString();
+				    	String s = sOne + " " + sTwo;
+				    	//ArrayList<Integer> value = wordAppearances.get(s);
+				    	TreeMap<Integer, ArrayList<Integer>> idsAndPositions = wordAppearances.get(s);
+				    	if (idsAndPositions != null){
+					    	ArrayList<Integer> positions = idsAndPositions.get(i);
+						    if (positions != null /*&& !value.containsKey(wordsPosCounter)*/) {
+						    	positions.add(wordsPosCounter);
+						    } else { /*probably not needed */
+						    	positions = new ArrayList<Integer>();
+						    	positions.add(wordsPosCounter);
+						    	idsAndPositions.put(i, positions);
+						    }
+				    	}
+				    	else{
+				    		idsAndPositions = new TreeMap<Integer, ArrayList<Integer>>();
+				    		ArrayList<Integer> positions = new ArrayList<Integer>();
+				    		positions.add(wordsPosCounter);
+				    		idsAndPositions.put(i, positions);
+				    		wordAppearances.put(s, idsAndPositions);
+				    	}
+					    wordsPosCounter++;
+			    	//}
+			    }
+
+			} catch (IOException e) {
+			    e.printStackTrace();
+			}
+		
+		}
+		return wordAppearances;
+	}
+	
+	static TreeMap<String,ArrayList<Integer>> createMatrixPositional(TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances){
 		TreeMap<String,ArrayList<Integer>> matrix = new TreeMap<String,ArrayList<Integer>>();
 	    //TreeMap<Integer, List<MySpecialClass>> copy = new TreeMap<Integer, List<MySpecialClass>>();
 	    for (Entry<String, TreeMap<Integer, ArrayList<Integer>>> iter : wordAppearances.entrySet())
@@ -241,8 +315,36 @@ private static byte[] readFileAsBytes(String filePath) {
 		
 		return res;		
 	}
-	
-	
+	/*
+	static ArrayList<Integer> FindBiwords(TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances, String key){
+		String toBeFound = key;
+		toBeFound = toBeFound.replaceAll("[^a-zA-Z ]+","");
+		toBeFound = toBeFound.toLowerCase(); 
+	   List<String> allWordsToBeFound = Arrays.asList(toBeFound.split("\\s+"));
+
+		for (String s : allWordsToBeFound){
+	    	Stemmer stmmr = new Stemmer();
+	    	char[] s_arr = s.toCharArray();
+	    	int s_length = s.length();
+	    	stmmr.add(s_arr, s_length);
+	    	stmmr.stem();
+	    	s = stmmr.toString();
+	    	//allWordsToBeFound.
+		}
+		boolean found = false;
+		for (int i = 0; i < allWordsToBeFound.size()-1; i++){
+			
+		}
+		ArrayList<Integer> res = wordAppearances.get(key);
+		
+		if (res == null){
+			res = new ArrayList<Integer>();
+		}
+		
+		
+		return res;		
+	}
+	*/
 	static void outputToTxt(TreeMap<String,ArrayList<Integer>> wordAppearances){
 	    FileWriter writer;
 		try {

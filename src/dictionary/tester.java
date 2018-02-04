@@ -14,12 +14,14 @@ public class tester {
 	//static ArrayList<String> words = new ArrayList<String>();
 	
 	static TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances = new TreeMap<String,TreeMap<Integer, ArrayList<Integer>>>();
+	static TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearancesTwo = new TreeMap<String,TreeMap<Integer, ArrayList<Integer>>>();
 	static TreeMap<String, ArrayList<Integer>> wordAppearancesMatrix = new TreeMap<String, ArrayList<Integer>>();
 
 	public static void main(String[] args) {
-		wordAppearances = PDFReader.createDictionary(file_name,  file_format,  file_path,  words_one_book,  wordAppearances);
+		//wordAppearances = PDFReader.createDictionaryPositional(file_name,  file_format,  file_path,  words_one_book,  wordAppearances);
+		wordAppearancesTwo = PDFReader.createDictionaryBiwords(file_name,  file_format,  file_path,  words_one_book,  wordAppearancesTwo);
 		
-		wordAppearancesMatrix = PDFReader.createMatrix(wordAppearances);
+		wordAppearancesMatrix = PDFReader.createMatrixPositional(wordAppearances);
 		/*
 		PDFReader.outputToTxt(wordAppearances);
 		System.out.println("Output file created and filled.");
