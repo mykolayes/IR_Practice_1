@@ -8,7 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +54,7 @@ private static byte[] readFileAsBytes(String filePath) {
 	    return txt;
 	}
 	
-	static HashMap<String,ArrayList<Integer>> createDictionary(String file_name, String file_format, String file_path, List<String> words_one_book, HashMap<String,ArrayList<Integer>> wordAppearances) {
+	static TreeMap<String,ArrayList<Integer>> createDictionary(String file_name, String file_format, String file_path, List<String> words_one_book, TreeMap<String,ArrayList<Integer>> wordAppearances) {
 		try {
 			numOfDocs = (int) Files.list(Paths.get(file_path)).count();
 		} catch (IOException e1) {
@@ -107,7 +107,7 @@ private static byte[] readFileAsBytes(String filePath) {
 		return wordAppearances;
 	}
 /*	
-	static void outputToTxt(HashMap<String,ArrayList<Integer>> wordAppearances){
+	static void outputToTxt(TreeMap<String,ArrayList<Integer>> wordAppearances){
 	    FileWriter writer;
 		try {
 			writer = new FileWriter("output.txt");
@@ -135,7 +135,7 @@ private static byte[] readFileAsBytes(String filePath) {
 		System.out.println("Job done, bois.");
 	}
 */	
-	static ArrayList<Integer> And(HashMap<String,ArrayList<Integer>> wordAppearances, String one, String two){
+	static ArrayList<Integer> And(TreeMap<String,ArrayList<Integer>> wordAppearances, String one, String two){
 		ArrayList<Integer> res = new ArrayList<Integer>();
 		
 		ArrayList<Integer> resOne = Find(wordAppearances, one);
@@ -152,7 +152,7 @@ private static byte[] readFileAsBytes(String filePath) {
 		return res;	
 	}
 	
-	static ArrayList<Integer> Or(HashMap<String,ArrayList<Integer>> wordAppearances, String one, String two){
+	static ArrayList<Integer> Or(TreeMap<String,ArrayList<Integer>> wordAppearances, String one, String two){
 		ArrayList<Integer> res = new ArrayList<Integer>();
 		
 		ArrayList<Integer> resOne = Find(wordAppearances, one);
@@ -171,7 +171,7 @@ private static byte[] readFileAsBytes(String filePath) {
 		return res;	
 	}
 	
-	static ArrayList<Integer> Not(HashMap<String,ArrayList<Integer>> wordAppearances, String one){
+	static ArrayList<Integer> Not(TreeMap<String,ArrayList<Integer>> wordAppearances, String one){
 		ArrayList<Integer> res = new ArrayList<Integer>();
 		
 		ArrayList<Integer> resOne = Find(wordAppearances, one);
@@ -189,7 +189,7 @@ private static byte[] readFileAsBytes(String filePath) {
 		return res;	
 	}
 	
-	static ArrayList<Integer> Find(HashMap<String,ArrayList<Integer>> wordAppearances, String key){
+	static ArrayList<Integer> Find(TreeMap<String,ArrayList<Integer>> wordAppearances, String key){
     	Stemmer stmmr = new Stemmer();
     	char[] s_arr = key.toCharArray();
     	int s_length = key.length();
@@ -207,9 +207,9 @@ private static byte[] readFileAsBytes(String filePath) {
 		return res;		
 	}
 	
-	static HashMap<String,ArrayList<Integer>> createMatrix(HashMap<String,ArrayList<Integer>> wordAppearances){
-		HashMap<String,ArrayList<Integer>> matrix = new HashMap<String,ArrayList<Integer>>();
-	    //HashMap<Integer, List<MySpecialClass>> copy = new HashMap<Integer, List<MySpecialClass>>();
+	static TreeMap<String,ArrayList<Integer>> createMatrix(TreeMap<String,ArrayList<Integer>> wordAppearances){
+		TreeMap<String,ArrayList<Integer>> matrix = new TreeMap<String,ArrayList<Integer>>();
+	    //TreeMap<Integer, List<MySpecialClass>> copy = new TreeMap<Integer, List<MySpecialClass>>();
 	    for (Map.Entry<String,ArrayList<Integer>> iter : wordAppearances.entrySet())
 	    {
 	    	matrix.put(iter.getKey(), new ArrayList<Integer>(iter.getValue()));
@@ -232,7 +232,7 @@ private static byte[] readFileAsBytes(String filePath) {
 		return matrix;	
 	}
 	
-	static void outputToTxt(HashMap<String,ArrayList<Integer>> wordAppearances){
+	static void outputToTxt(TreeMap<String,ArrayList<Integer>> wordAppearances){
 	    FileWriter writer;
 		try {
 			writer = new FileWriter("output.txt");

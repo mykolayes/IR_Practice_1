@@ -1,7 +1,7 @@
 /*Yeshchenko Mykola, FI-2*/
 package dictionary;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.List;
 import java.util.Scanner;
 import dictionary.PDFReader;
@@ -12,8 +12,8 @@ public class tester {
 	static List<String> words_one_book;
 	//static ArrayList<String> words = new ArrayList<String>();
 	
-	static HashMap<String,ArrayList<Integer>> wordAppearances = new HashMap<String,ArrayList<Integer>>();
-	static HashMap<String,ArrayList<Integer>> wordAppearancesMatrix = new HashMap<String,ArrayList<Integer>>();
+	static TreeMap<String,ArrayList<Integer>> wordAppearances = new TreeMap<String,ArrayList<Integer>>();
+	static TreeMap<String,ArrayList<Integer>> wordAppearancesMatrix = new TreeMap<String,ArrayList<Integer>>();
 
 	public static void main(String[] args) {
 		wordAppearances = PDFReader.createDictionary(file_name,  file_format,  file_path,  words_one_book,  wordAppearances);
