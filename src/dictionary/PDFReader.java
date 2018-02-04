@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.HashSet;
 import java.util.List;
@@ -54,7 +55,8 @@ private static byte[] readFileAsBytes(String filePath) {
 	    return txt;
 	}
 	
-	static TreeMap<String,ArrayList<Integer>> createDictionary(String file_name, String file_format, String file_path, List<String> words_one_book, TreeMap<String,ArrayList<Integer>> wordAppearances) {
+	static TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> createDictionary(String file_name, String file_format, String file_path, List<String> words_one_book, TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances) {
+		Integer wordsPosCounter;
 		try {
 			numOfDocs = (int) Files.list(Paths.get(file_path)).count();
 		} catch (IOException e1) {
@@ -63,7 +65,7 @@ private static byte[] readFileAsBytes(String filePath) {
 		}
 		for (int i = 0; i < numOfDocs; i++){ 
 			file_name = file_path + i + file_format;
-		
+			wordsPosCounter = 1;
 			try {
 			    String text = PDFReader.getText(new File(file_name));
 			    text = text.replaceAll("[^a-zA-Z \t\n'-]+","");
@@ -84,14 +86,26 @@ private static byte[] readFileAsBytes(String filePath) {
 			    	stmmr.add(s_arr, s_length);
 			    	stmmr.stem();
 			    	s = stmmr.toString();
-			    	ArrayList<Integer> value = wordAppearances.get(s);
-				    if (value != null && !value.contains(i)) {
-				        value.add(i);
-				    } else {
-				    	value = new ArrayList<Integer>();
-				    	value.add(i);
-				    	wordAppearances.put(s, value);
-				    }
+			    	//ArrayList<Integer> value = wordAppearances.get(s);
+			    	TreeMap<Integer, ArrayList<Integer>> idsAndPositions = wordAppearances.get(s);
+			    	if (idsAndPositions != null){
+				    	ArrayList<Integer> positions = idsAndPositions.get(i);
+					    if (positions != null /*&& !value.containsKey(wordsPosCounter)*/) {
+					    	positions.add(wordsPosCounter);
+					    } else { /*probably not needed */
+					    	positions = new ArrayList<Integer>();
+					    	positions.add(wordsPosCounter);
+					    	idsAndPositions.put(i, positions);
+					    }
+			    	}
+			    	else{
+			    		idsAndPositions = new TreeMap<Integer, ArrayList<Integer>>();
+			    		ArrayList<Integer> positions = new ArrayList<Integer>();
+			    		positions.add(wordsPosCounter);
+			    		idsAndPositions.put(i, positions);
+			    		wordAppearances.put(s, idsAndPositions);
+			    	}
+				    wordsPosCounter++;
 			    }
 
 			} catch (IOException e) {
@@ -99,12 +113,33 @@ private static byte[] readFileAsBytes(String filePath) {
 			}
 		
 		}
-		//sort here (not really needed tbh).
-		/*
-		TreeMap<String,ArrayList<Integer>> sortedMap = new TreeMap<>();
-		sortedMap.putAll(wordAppearances);
-		*/
 		return wordAppearances;
+	}
+	
+	static TreeMap<String,ArrayList<Integer>> createMatrix(TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances){
+		TreeMap<String,ArrayList<Integer>> matrix = new TreeMap<String,ArrayList<Integer>>();
+	    //TreeMap<Integer, List<MySpecialClass>> copy = new TreeMap<Integer, List<MySpecialClass>>();
+	    for (Entry<String, TreeMap<Integer, ArrayList<Integer>>> iter : wordAppearances.entrySet())
+	    {
+	    	TreeMap<Integer, ArrayList<Integer>> currPos = iter.getValue();
+	    	matrix.put(iter.getKey(), new ArrayList<Integer>(currPos.keySet()));
+	    }
+		//matrix.putAll(wordAppearances);
+		ArrayList<Integer> eachElKeys;
+			for (String key : matrix.keySet()){
+				eachElKeys = new ArrayList<Integer>(matrix.get(key));
+				matrix.get(key).clear();
+				for (int j = 0; j < numOfDocs; j++){
+					if (eachElKeys.contains(j)){
+						matrix.get(key).add(1);
+					}
+					else{
+						matrix.get(key).add(0);
+					}
+				}
+			}
+		
+		return matrix;	
 	}
 /*	
 	static void outputToTxt(TreeMap<String,ArrayList<Integer>> wordAppearances){
@@ -207,30 +242,6 @@ private static byte[] readFileAsBytes(String filePath) {
 		return res;		
 	}
 	
-	static TreeMap<String,ArrayList<Integer>> createMatrix(TreeMap<String,ArrayList<Integer>> wordAppearances){
-		TreeMap<String,ArrayList<Integer>> matrix = new TreeMap<String,ArrayList<Integer>>();
-	    //TreeMap<Integer, List<MySpecialClass>> copy = new TreeMap<Integer, List<MySpecialClass>>();
-	    for (Map.Entry<String,ArrayList<Integer>> iter : wordAppearances.entrySet())
-	    {
-	    	matrix.put(iter.getKey(), new ArrayList<Integer>(iter.getValue()));
-	    }
-		//matrix.putAll(wordAppearances);
-		ArrayList<Integer> eachElKeys;
-			for (String key : matrix.keySet()){
-				eachElKeys = new ArrayList<Integer>(matrix.get(key));
-				matrix.get(key).clear();
-				for (int j = 0; j < numOfDocs; j++){
-					if (eachElKeys.contains(j)){
-						matrix.get(key).add(1);
-					}
-					else{
-						matrix.get(key).add(0);
-					}
-				}
-			}
-		
-		return matrix;	
-	}
 	
 	static void outputToTxt(TreeMap<String,ArrayList<Integer>> wordAppearances){
 	    FileWriter writer;

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.TreeMap;
 import java.util.List;
 import java.util.Scanner;
+
 import dictionary.PDFReader;
 
 
@@ -12,12 +13,14 @@ public class tester {
 	static List<String> words_one_book;
 	//static ArrayList<String> words = new ArrayList<String>();
 	
-	static TreeMap<String,ArrayList<Integer>> wordAppearances = new TreeMap<String,ArrayList<Integer>>();
-	static TreeMap<String,ArrayList<Integer>> wordAppearancesMatrix = new TreeMap<String,ArrayList<Integer>>();
+	static TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances = new TreeMap<String,TreeMap<Integer, ArrayList<Integer>>>();
+	static TreeMap<String, ArrayList<Integer>> wordAppearancesMatrix = new TreeMap<String, ArrayList<Integer>>();
 
 	public static void main(String[] args) {
 		wordAppearances = PDFReader.createDictionary(file_name,  file_format,  file_path,  words_one_book,  wordAppearances);
+		
 		wordAppearancesMatrix = PDFReader.createMatrix(wordAppearances);
+		/*
 		PDFReader.outputToTxt(wordAppearances);
 		System.out.println("Output file created and filled.");
 		try(Scanner scan = new Scanner(System.in)){		
@@ -72,6 +75,7 @@ public class tester {
 			}
 		}
 		System.out.println("End of the testing program. Thank you!");
+		*/
 	}
 
 }
