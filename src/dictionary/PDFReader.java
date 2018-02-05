@@ -315,8 +315,9 @@ private static byte[] readFileAsBytes(String filePath) {
 		
 		return res;		
 	}
-	/*
-	static ArrayList<Integer> FindBiwords(TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances, String key){
+	
+
+	static ArrayList<Integer> FindBiwordsPhrasal(TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances, String key){
 		String toBeFound = key;
 		toBeFound = toBeFound.replaceAll("[^a-zA-Z ]+","");
 		toBeFound = toBeFound.toLowerCase(); 
@@ -331,16 +332,113 @@ private static byte[] readFileAsBytes(String filePath) {
 	    	s = stmmr.toString();
 	    	//allWordsToBeFound.
 		}
-		boolean found = false;
-		for (int i = 0; i < allWordsToBeFound.size()-1; i++){
-			
+		ArrayList<Integer> res = new ArrayList<Integer>();
+		//boolean found = false;
+		for (int i = 0; i < allWordsToBeFound.size() - 1; i++){
+			ArrayList<Integer> resOneQuery = new ArrayList<Integer>();
+			//resOneQuery = Find(wordAppearances, allWordsToBeFound.get(i));
+			ArrayList<Integer> resTmp = new ArrayList<Integer>();
+			String currBiWordToBeFound = allWordsToBeFound.get(i) + " " + allWordsToBeFound.get(i+1);
+			    	TreeMap<Integer, ArrayList<Integer>> idsAndPositions = wordAppearances.get(currBiWordToBeFound);
+			    	resOneQuery.addAll(idsAndPositions.keySet());
+			    	if (!res.isEmpty()){
+				    	for (int j = 0; j < numOfDocs; j++){
+				    		if(res.contains(j) && resOneQuery.contains(j)){
+				    			resTmp.add(j);
+				    		}
+				    	}
+			    	}
+			    	else {
+			    		resTmp = resOneQuery;
+			    	}
+			//res.addAll(idsAndPositions.keySet());
+			    	res = resTmp;
 		}
-		ArrayList<Integer> res = wordAppearances.get(key);
+		//ArrayList<Integer> res = wordAppearances.get(key);
 		
-		if (res == null){
-			res = new ArrayList<Integer>();
+		return res;		
+	}
+	
+	static ArrayList<Integer> FindPositionalPhrasal(TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances, String key){
+		String toBeFound = key;
+		toBeFound = toBeFound.replaceAll("[^a-zA-Z ]+","");
+		toBeFound = toBeFound.toLowerCase(); 
+	   List<String> allWordsToBeFound = Arrays.asList(toBeFound.split("\\s+"));
+
+		for (String s : allWordsToBeFound){
+	    	Stemmer stmmr = new Stemmer();
+	    	char[] s_arr = s.toCharArray();
+	    	int s_length = s.length();
+	    	stmmr.add(s_arr, s_length);
+	    	stmmr.stem();
+	    	s = stmmr.toString();
+	    	//allWordsToBeFound.
 		}
+		ArrayList<Integer> res = new ArrayList<Integer>();
+		//boolean found = false;
+		for (int i = 0; i < allWordsToBeFound.size(); i++){
+			ArrayList<Integer> resOneQuery = new ArrayList<Integer>();
+			//resOneQuery = Find(wordAppearances, allWordsToBeFound.get(i));
+			ArrayList<Integer> resTmp = new ArrayList<Integer>();
+			String currWordToBeFound = allWordsToBeFound.get(i);
+			    	TreeMap<Integer, ArrayList<Integer>> idsAndPositions = wordAppearances.get(currWordToBeFound);
+			    	resOneQuery.addAll(idsAndPositions.keySet());
+			    	if (!res.isEmpty()){
+				    	for (int j = 0; j < numOfDocs; j++){
+				    		if(res.contains(j) && resOneQuery.contains(j)){
+				    			resTmp.add(j);
+				    		}
+				    	}
+			    	}
+			    	else {
+			    		resTmp = resOneQuery;
+			    	}
+			//res.addAll(idsAndPositions.keySet());
+			    	res = resTmp;
+		}
+		//ArrayList<Integer> res = wordAppearances.get(key);
 		
+		return res;		
+	}
+	/*
+	static ArrayList<Integer> FindBiwordsNear(TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances, String key){
+		String toBeFound = key;
+		toBeFound = toBeFound.replaceAll("[^a-zA-Z ]+","");
+		toBeFound = toBeFound.toLowerCase(); 
+	   List<String> allWordsToBeFound = Arrays.asList(toBeFound.split("\\s+"));
+
+		for (String s : allWordsToBeFound){
+	    	Stemmer stmmr = new Stemmer();
+	    	char[] s_arr = s.toCharArray();
+	    	int s_length = s.length();
+	    	stmmr.add(s_arr, s_length);
+	    	stmmr.stem();
+	    	s = stmmr.toString();
+	    	//allWordsToBeFound.
+		}
+		ArrayList<Integer> res = new ArrayList<Integer>();
+		//boolean found = false;
+		for (int i = 0; i < allWordsToBeFound.size() - 1; i++){
+			ArrayList<Integer> resOneQuery = new ArrayList<Integer>();
+			//resOneQuery = Find(wordAppearances, allWordsToBeFound.get(i));
+			ArrayList<Integer> resTmp = new ArrayList<Integer>();
+			String currBiWordToBeFound = allWordsToBeFound.get(i) + " " + allWordsToBeFound.get(i+1);
+			    	TreeMap<Integer, ArrayList<Integer>> idsAndPositions = wordAppearances.get(currBiWordToBeFound);
+			    	resOneQuery.addAll(idsAndPositions.keySet());
+			    	if (!res.isEmpty()){
+				    	for (int j = 0; j < numOfDocs; j++){
+				    		if(res.contains(j) && resOneQuery.contains(j)){
+				    			resTmp.add(j);
+				    		}
+				    	}
+			    	}
+			    	else {
+			    		resTmp = resOneQuery;
+			    	}
+			//res.addAll(idsAndPositions.keySet());
+			    	res = resTmp;
+		}
+		//ArrayList<Integer> res = wordAppearances.get(key);
 		
 		return res;		
 	}
@@ -353,14 +451,14 @@ private static byte[] readFileAsBytes(String filePath) {
 			
 			TreeMap<String,ArrayList<Integer>> sortedMap = new TreeMap<>();
 			sortedMap.putAll(wordAppearances);
-
+			Integer wordID = 1;
 			for (Map.Entry<String,ArrayList<Integer>> entry : sortedMap.entrySet()) {
 			    for (Integer s : entry.getValue()){
 				    sb.append(s);
 				    sb.append("\t");
 				}
-
-	    		writer.write(entry.getKey() + " : " + sb.toString() + System.lineSeparator());
+			    wordID++;
+	    		writer.write(wordID + " " + entry.getKey() + " : " + sb.toString() + System.lineSeparator());
 	    		sb.setLength(0);
 	    }
 	    writer.close();

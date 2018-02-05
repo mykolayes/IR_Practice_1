@@ -16,19 +16,46 @@ public class tester {
 	static TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances = new TreeMap<String,TreeMap<Integer, ArrayList<Integer>>>();
 	static TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearancesTwo = new TreeMap<String,TreeMap<Integer, ArrayList<Integer>>>();
 	static TreeMap<String, ArrayList<Integer>> wordAppearancesMatrix = new TreeMap<String, ArrayList<Integer>>();
+	static ArrayList<Integer> searchRes = new ArrayList<Integer>();
+	static String toBeF;
 
 	public static void main(String[] args) {
-		//wordAppearances = PDFReader.createDictionaryPositional(file_name,  file_format,  file_path,  words_one_book,  wordAppearances);
-		wordAppearancesTwo = PDFReader.createDictionaryBiwords(file_name,  file_format,  file_path,  words_one_book,  wordAppearancesTwo);
-		
-		wordAppearancesMatrix = PDFReader.createMatrixPositional(wordAppearances);
+		wordAppearances = PDFReader.createDictionaryPositional(file_name,  file_format,  file_path,  words_one_book,  wordAppearances);
+		//wordAppearancesTwo = PDFReader.createDictionaryBiwords(file_name,  file_format,  file_path,  words_one_book,  wordAppearancesTwo);
+
+		//wordAppearancesMatrix = PDFReader.createMatrixPositional(wordAppearances);
 		/*
 		PDFReader.outputToTxt(wordAppearances);
 		System.out.println("Output file created and filled.");
+		*/
 		try(Scanner scan = new Scanner(System.in)){		
+			/*
 			System.out.println("Enter a word to be found: ");
 			String toBeFound = scan.next(); //e.g. "episode/affectionate"
-			 
+			
+			
+			
+			
+			System.out.println("Enter a phrase to be found: ");
+			toBeF = scan.nextLine();
+			searchRes = PDFReader.FindBiwordsPhrasal(wordAppearancesTwo, toBeF);
+			if (!searchRes.isEmpty()){
+				System.out.println("Given phrase was found in following documents: " + searchRes);
+			}
+			else {
+				System.out.println("Given phrase was not found.");
+			}
+			*/
+			System.out.println("Enter a phrase to be found: ");
+			toBeF = scan.nextLine();
+			searchRes = PDFReader.FindPositionalPhrasal(wordAppearances, toBeF);
+			if (!searchRes.isEmpty()){
+				System.out.println("Given phrase was found in following documents: " + searchRes);
+			}
+			else {
+				System.out.println("Given phrase was not found.");
+			}
+			 /*
 			ArrayList<Integer> foundIn = PDFReader.Find(wordAppearances, toBeFound);
 			if (!foundIn.isEmpty()){
 				System.out.println("Given word was found in following documents: " + foundIn);
@@ -75,9 +102,10 @@ public class tester {
 			else {
 				System.out.println("Given words were not found.");
 			}
+			*/
 		}
 		System.out.println("End of the testing program. Thank you!");
-		*/
+		
 	}
 
 }
