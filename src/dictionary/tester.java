@@ -21,7 +21,7 @@ public class tester {
 	static String toBeF;
 
 	public static void main(String[] args) {
-		wordAppearances = PDFReader.createDictionaryPositional(file_name,  file_format,  file_path,  words_one_book,  wordAppearances);
+		//wordAppearances = PDFReader.createDictionaryPositional(file_name,  file_format,  file_path,  words_one_book,  wordAppearances);
 		//wordAppearancesTwo = PDFReader.createDictionaryBiwords(file_name,  file_format,  file_path,  words_one_book,  wordAppearancesTwo);
 
 		//wordAppearancesMatrix = PDFReader.createMatrixPositional(wordAppearances);
@@ -33,24 +33,15 @@ public class tester {
 			/*
 			System.out.println("Enter a word to be found: ");
 			String toBeFound = scan.next(); //e.g. "episode/affectionate"
-			
-			
-			
-			
-			System.out.println("Enter a phrase to be found: ");
-			toBeF = scan.nextLine();
-			searchRes = PDFReader.FindBiwordsPhrasal(wordAppearancesTwo, toBeF);
-			if (!searchRes.isEmpty()){
-				System.out.println("Given phrase was found in following documents: " + searchRes);
-			}
-			else {
-				System.out.println("Given phrase was not found.");
-			}
 			*/
+			
+			
+			/** Biwords */
+			wordAppearancesTwo = PDFReader.createDictionaryBiwords(file_name,  file_format,  file_path,  words_one_book,  wordAppearancesTwo);
 			/*
 			System.out.println("Enter a phrase to be found: ");
 			toBeF = scan.nextLine();
-			searchRes = PDFReader.FindPositionalPhrasal(wordAppearances, toBeF);
+			searchRes = PDFReader.FindBiwordsPhrasal(wordAppearancesTwo, toBeF);
 			if (!searchRes.isEmpty()){
 				System.out.println("Given phrase was found in following documents: " + searchRes);
 			}
@@ -64,19 +55,56 @@ public class tester {
 			toBeF = scan.nextLine();
 			System.out.println("Enter how close they should be to each other: ");
 			int margin = scan.nextInt();
+			searchResTwo = PDFReader.FindBiwordsNear(wordAppearancesTwo, toBeF, margin);
+			for (int i = 0; i < searchResTwo.size(); i++){
+				ArrayList<Integer> inThisDoc = new ArrayList<Integer>(searchResTwo.get(i));
+				if (!inThisDoc.isEmpty()){
+					System.out.println("Given words were found nearby in document #" + i + ": " + inThisDoc);
+				}
+				
+				//else {
+				//	System.out.println("Given words were not found in document #" + i + ".");
+				//}
+				
+
+			}
+			
+			
+			/** Positional */
+			//wordAppearances = PDFReader.createDictionaryPositional(file_name,  file_format,  file_path,  words_one_book,  wordAppearances);
+			/*
+			System.out.println("Enter a phrase to be found: ");
+			toBeF = scan.nextLine();
+			searchRes = PDFReader.FindPositionalPhrasal(wordAppearances, toBeF);
+			if (!searchRes.isEmpty()){
+				System.out.println("Given phrase was found in following documents: " + searchRes);
+			}
+			else {
+				System.out.println("Given phrase was not found.");
+			}
+			
+			
+			
+			System.out.println("Enter words to be found nearby: ");
+			toBeF = scan.nextLine();
+			System.out.println("Enter proximity (how close they should be to each other): ");
+			int margin = scan.nextInt();
 			searchResTwo = PDFReader.FindPositionalNear(wordAppearances, toBeF, margin);
 			for (int i = 0; i < searchResTwo.size(); i++){
 				ArrayList<Integer> inThisDoc = new ArrayList<Integer>(searchResTwo.get(i));
 				if (!inThisDoc.isEmpty()){
 					System.out.println("Given words were found nearby in document #" + i + ": " + inThisDoc);
 				}
-				/*
-				else {
-					System.out.println("Given words were not found in document #" + i + ".");
-				}
-				*/
+				
+				//else {
+				//	System.out.println("Given words were not found in document #" + i + ".");
+				//}
+				
 
 			}
+			
+			 */
+			
 			
 			
 			
