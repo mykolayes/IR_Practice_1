@@ -443,6 +443,101 @@ private static byte[] readFileAsBytes(String filePath) {
 		return res;		
 	}
 	*/
+	static TreeMap<Integer, ArrayList<Integer>> FindPositionalNear(TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances, String key, int margin){
+		String toBeFound = key;
+		toBeFound = toBeFound.replaceAll("[^a-zA-Z ]+","");
+		toBeFound = toBeFound.toLowerCase(); 
+	   List<String> allWordsToBeFound = Arrays.asList(toBeFound.split("\\s+"));
+	   
+	   //int amountOfWordsToBeFound = allWordsToBeFound.size();
+	   //int wordFoundYesNo[] = new int[amountOfWordsToBeFound];
+	   
+		for (String s : allWordsToBeFound){
+	    	Stemmer stmmr = new Stemmer();
+	    	char[] s_arr = s.toCharArray();
+	    	int s_length = s.length();
+	    	stmmr.add(s_arr, s_length);
+	    	stmmr.stem();
+	    	s = stmmr.toString();
+	    	//allWordsToBeFound.
+		}
+		//TreeMap<Integer, ArrayList<Integer>> nothingFound = new TreeMap<Integer, ArrayList<Integer>>();
+		//boolean found = false;
+		String currWordToBeFound = allWordsToBeFound.get(0);
+		TreeMap<Integer, ArrayList<Integer>> idsAndPositions = wordAppearances.get(currWordToBeFound); //global res
+		
+		if (idsAndPositions.isEmpty()){ //if idsAndPositions is empty => no docs found.
+			return idsAndPositions; 
+		}
+		
+		for (int i = 1; i < allWordsToBeFound.size(); i++){
+			
+			//ArrayList<Integer> resOneQuery = new ArrayList<Integer>();
+			
+			currWordToBeFound = allWordsToBeFound.get(i);
+			TreeMap<Integer, ArrayList<Integer>> idsAndPositionsCurrent = new TreeMap<Integer, ArrayList<Integer>>(wordAppearances.get(currWordToBeFound)); //current i-th word res
+			
+			TreeMap<Integer, ArrayList<Integer>> idsAndPositionsNew = new TreeMap<Integer, ArrayList<Integer>>(); //global intersected with current word res
+			
+			for (int j=0; j < numOfDocs; j++){ //idsAndPositions.size()
+				if (idsAndPositionsCurrent.containsKey(j) && idsAndPositions.containsKey(j)){
+					ArrayList<Integer> valuesCurrent = new ArrayList<Integer>(idsAndPositionsCurrent.get(j));
+					ArrayList<Integer> valuesGlobal = new ArrayList<Integer>(idsAndPositions.get(j));
+					for(int k=0; k<valuesCurrent.size(); k++){
+						int coordCurr = valuesCurrent.get(k);
+						for (int l=0; l<valuesGlobal.size(); l++){
+							int coordGlobal = valuesGlobal.get(l);
+							if (Math.abs(coordGlobal - coordCurr) <= margin){
+								if (!idsAndPositionsNew.containsKey(j)){
+									ArrayList<Integer> newKey = new ArrayList<Integer>();
+									newKey.add(coordGlobal);
+									idsAndPositionsNew.put(j, newKey);
+								} else {
+									ArrayList<Integer> existingKey = idsAndPositionsNew.get(j);
+									existingKey.add(coordGlobal);
+								}
+							}
+						}
+					}
+				}
+			}
+			
+			
+			
+			
+			idsAndPositions = idsAndPositionsNew;
+			
+			if (idsAndPositions.isEmpty()){ //if idsAndPositions is empty => no docs found.
+				return idsAndPositions;
+			}
+
+			
+			
+			
+			/*
+			//String currWordToBeFound = allWordsToBeFound.get(i);
+			String currWordToBeFoundNext = allWordsToBeFound.get(i+1);
+				//ArrayList<Integer> positions = idsAndPositions.
+			    	resOneQuery.addAll(idsAndPositions.keySet());
+			    	if (!res.isEmpty()){
+				    	for (int j = 0; j < numOfDocs; j++){
+				    		if(res.contains(j) && resOneQuery.contains(j)){
+				    			resTmp.add(j);
+				    		}
+				    	}
+			    	}
+			    	else {
+			    		resTmp = resOneQuery;
+			    	}
+			//res.addAll(idsAndPositions.keySet());
+			    	res = resTmp;
+		}
+		//ArrayList<Integer> res = wordAppearances.get(key);
+		*/
+		}
+		return idsAndPositions;		
+	}
+	
 	static void outputToTxt(TreeMap<String,ArrayList<Integer>> wordAppearances){
 	    FileWriter writer;
 		try {

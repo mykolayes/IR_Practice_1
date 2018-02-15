@@ -17,6 +17,7 @@ public class tester {
 	static TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearancesTwo = new TreeMap<String,TreeMap<Integer, ArrayList<Integer>>>();
 	static TreeMap<String, ArrayList<Integer>> wordAppearancesMatrix = new TreeMap<String, ArrayList<Integer>>();
 	static ArrayList<Integer> searchRes = new ArrayList<Integer>();
+	static TreeMap<Integer, ArrayList<Integer>> searchResTwo = new TreeMap<Integer, ArrayList<Integer>>();
 	static String toBeF;
 
 	public static void main(String[] args) {
@@ -46,6 +47,7 @@ public class tester {
 				System.out.println("Given phrase was not found.");
 			}
 			*/
+			/*
 			System.out.println("Enter a phrase to be found: ");
 			toBeF = scan.nextLine();
 			searchRes = PDFReader.FindPositionalPhrasal(wordAppearances, toBeF);
@@ -55,6 +57,31 @@ public class tester {
 			else {
 				System.out.println("Given phrase was not found.");
 			}
+			*/
+			
+			
+			System.out.println("Enter words to be found nearby: ");
+			toBeF = scan.nextLine();
+			System.out.println("Enter how close they should be to each other: ");
+			int margin = scan.nextInt();
+			searchResTwo = PDFReader.FindPositionalNear(wordAppearances, toBeF, margin);
+			for (int i = 0; i < searchResTwo.size(); i++){
+				ArrayList<Integer> inThisDoc = new ArrayList<Integer>(searchResTwo.get(i));
+				if (!inThisDoc.isEmpty()){
+					System.out.println("Given words were found nearby in document #" + i + ": " + inThisDoc);
+				}
+				/*
+				else {
+					System.out.println("Given words were not found in document #" + i + ".");
+				}
+				*/
+
+			}
+			
+			
+			
+			
+			
 			 /*
 			ArrayList<Integer> foundIn = PDFReader.Find(wordAppearances, toBeFound);
 			if (!foundIn.isEmpty()){
