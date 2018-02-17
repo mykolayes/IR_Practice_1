@@ -720,6 +720,31 @@ private static byte[] readFileAsBytes(String filePath) {
 		}
 		return idsAndPositions;		
 	}
+	//generatePermutermIndices
+	static TreeMap<String, ArrayList<String>> generateThreeGramIndices(TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances){
+		TreeMap<String, ArrayList<String>> threeGrams = new TreeMap<String, ArrayList<String>>();
+		for (String word : wordAppearances.keySet()) {
+			//if(word.length()>0){
+				String wordLocal = "$" + word + "$";
+				for (int i =0; i < wordLocal.length()-2; i++){
+					//int endIndex = i+2;
+					String partTBA = wordLocal.substring(i, i+3);
+					if (threeGrams.containsKey(partTBA)){
+						ArrayList<String> listOfWordsWithThreeGram = threeGrams.get(partTBA);
+						if (!listOfWordsWithThreeGram.contains(word)){
+							listOfWordsWithThreeGram.add(word);
+						}
+					}
+					else {
+						ArrayList<String> firstWordForNewKey = new ArrayList<String>();
+						firstWordForNewKey.add(word);
+						threeGrams.put(partTBA, firstWordForNewKey);
+					}	
+				}
+			//}
+		}
+	return threeGrams;
+	}
 	
 	static void outputToTxtPositional(TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances){
 	    FileWriter writer;
