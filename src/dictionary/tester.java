@@ -37,7 +37,7 @@ public class tester {
 			
 			
 			/** Biwords */
-			wordAppearancesTwo = PDFReader.createDictionaryBiwords(file_name,  file_format,  file_path,  words_one_book,  wordAppearancesTwo);
+			//wordAppearancesTwo = PDFReader.createDictionaryBiwords(file_name,  file_format,  file_path,  words_one_book,  wordAppearancesTwo);
 			/*
 			System.out.println("Enter a phrase to be found: ");
 			toBeF = scan.nextLine();
@@ -50,7 +50,7 @@ public class tester {
 			}
 			*/
 			
-			
+			/*
 			System.out.println("Enter words to be found nearby: ");
 			toBeF = scan.nextLine();
 			System.out.println("Enter how close they should be to each other: ");
@@ -65,13 +65,11 @@ public class tester {
 				//else {
 				//	System.out.println("Given words were not found in document #" + i + ".");
 				//}
-				
-
 			}
-			
+			*/
 			
 			/** Positional */
-			//wordAppearances = PDFReader.createDictionaryPositional(file_name,  file_format,  file_path,  words_one_book,  wordAppearances);
+			wordAppearances = PDFReader.createDictionaryPositional(file_name,  file_format,  file_path,  words_one_book,  wordAppearances);
 			/*
 			System.out.println("Enter a phrase to be found: ");
 			toBeF = scan.nextLine();
@@ -82,8 +80,9 @@ public class tester {
 			else {
 				System.out.println("Given phrase was not found.");
 			}
+			*/
 			
-			
+			PDFReader.outputToTxtPositional(wordAppearances);
 			
 			System.out.println("Enter words to be found nearby: ");
 			toBeF = scan.nextLine();
@@ -99,11 +98,9 @@ public class tester {
 				//else {
 				//	System.out.println("Given words were not found in document #" + i + ".");
 				//}
-				
-
 			}
 			
-			 */
+			 
 			
 			
 			

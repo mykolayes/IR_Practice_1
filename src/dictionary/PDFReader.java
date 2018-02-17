@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
 
 import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -116,6 +117,68 @@ private static byte[] readFileAsBytes(String filePath) {
 		return wordAppearances;
 	}
 	
+	static TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> createDictionaryPositionalReversed(String file_name, String file_format, String file_path, List<String> words_one_book, TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances) {
+		Integer wordsPosCounter;
+		try {
+			numOfDocs = (int) Files.list(Paths.get(file_path)).count();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		for (int i = 0; i < numOfDocs; i++){ 
+			file_name = file_path + i + file_format;
+			wordsPosCounter = 1;
+			try {
+			    String text = PDFReader.getText(new File(file_name));
+			    text = text.replaceAll("[^a-zA-Z \t\n'-]+","");
+			    text = text.toLowerCase(); 
+			    //^ Locale.ENGLISH
+			    try {
+			       //words = text.split("\\s+");
+			       words_one_book = Arrays.asList(text.split("\\s+"));
+			    } catch (PatternSyntaxException ex) {
+			        // 
+			    }
+			    for (String s : words_one_book) {
+			    	//s.toLowerCase();
+			    	//stem here
+			    	Stemmer stmmr = new Stemmer();
+			    	char[] s_arr = s.toCharArray();
+			    	int s_length = s.length();
+			    	stmmr.add(s_arr, s_length);
+			    	stmmr.stem();
+			    	s = stmmr.toString();
+			    	s = new StringBuilder(s).reverse().toString();
+			    	//ArrayList<Integer> value = wordAppearances.get(s);
+			    	TreeMap<Integer, ArrayList<Integer>> idsAndPositions = wordAppearances.get(s);
+			    	if (idsAndPositions != null){
+				    	ArrayList<Integer> positions = idsAndPositions.get(i);
+					    if (positions != null /*&& !value.containsKey(wordsPosCounter)*/) {
+					    	positions.add(wordsPosCounter);
+					    } else { /*probably not needed */
+					    	positions = new ArrayList<Integer>();
+					    	positions.add(wordsPosCounter);
+					    	idsAndPositions.put(i, positions);
+					    }
+			    	}
+			    	else{
+			    		idsAndPositions = new TreeMap<Integer, ArrayList<Integer>>();
+			    		ArrayList<Integer> positions = new ArrayList<Integer>();
+			    		positions.add(wordsPosCounter);
+			    		idsAndPositions.put(i, positions);
+			    		wordAppearances.put(s, idsAndPositions);
+			    	}
+				    wordsPosCounter++;
+			    }
+
+			} catch (IOException e) {
+			    e.printStackTrace();
+			}
+		
+		}
+		return wordAppearances;
+	}
+	
 	static TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> createDictionaryBiwords(String file_name, String file_format, String file_path, List<String> words_one_book, TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances) {
 		Integer wordsPosCounter;
 		try {
@@ -159,6 +222,81 @@ private static byte[] readFileAsBytes(String filePath) {
 				    	stmmr.stem();
 				    	sTwo = stmmr.toString();
 				    	String s = sOne + " " + sTwo;
+				    	//ArrayList<Integer> value = wordAppearances.get(s);
+				    	TreeMap<Integer, ArrayList<Integer>> idsAndPositions = wordAppearances.get(s);
+				    	if (idsAndPositions != null){
+					    	ArrayList<Integer> positions = idsAndPositions.get(i);
+						    if (positions != null /*&& !value.containsKey(wordsPosCounter)*/) {
+						    	positions.add(wordsPosCounter);
+						    } else { /*probably not needed */
+						    	positions = new ArrayList<Integer>();
+						    	positions.add(wordsPosCounter);
+						    	idsAndPositions.put(i, positions);
+						    }
+				    	}
+				    	else{
+				    		idsAndPositions = new TreeMap<Integer, ArrayList<Integer>>();
+				    		ArrayList<Integer> positions = new ArrayList<Integer>();
+				    		positions.add(wordsPosCounter);
+				    		idsAndPositions.put(i, positions);
+				    		wordAppearances.put(s, idsAndPositions);
+				    	}
+					    wordsPosCounter++;
+			    	//}
+			    }
+
+			} catch (IOException e) {
+			    e.printStackTrace();
+			}
+		
+		}
+		return wordAppearances;
+	}
+	
+	static TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> createDictionaryBiwordsReversed(String file_name, String file_format, String file_path, List<String> words_one_book, TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances) {
+		Integer wordsPosCounter;
+		try {
+			numOfDocs = (int) Files.list(Paths.get(file_path)).count();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		for (int i = 0; i < numOfDocs; i++){ 
+			file_name = file_path + i + file_format;
+			wordsPosCounter = 1;
+			try {
+			    String text = PDFReader.getText(new File(file_name));
+			    text = text.replaceAll("[^a-zA-Z ]+","");
+			    text = text.toLowerCase(); 
+			    //^ Locale.ENGLISH
+			    try {
+			       //words = text.split("\\s+");
+			       words_one_book = Arrays.asList(text.split("\\s+"));
+			    } catch (PatternSyntaxException ex) {
+			        // 
+			    }
+			    for (int j = 0; j < words_one_book.size()-1; j++){
+			    	//if (words_one_book.size() > j + 1){
+				    	
+				    //for (String s : words_one_book) {
+				    	//s.toLowerCase();
+				    	//stem here
+				    	String sOne = words_one_book.get(j);
+				    	String sTwo = words_one_book.get(j+1);
+				    	Stemmer stmmr = new Stemmer();
+				    	char[] s_arr = sOne.toCharArray();
+				    	int s_length = sOne.length();
+				    	stmmr.add(s_arr, s_length);
+				    	stmmr.stem();
+				    	sOne = stmmr.toString();
+				    	
+				    	s_arr = sTwo.toCharArray();
+				    	s_length = sTwo.length();
+				    	stmmr.add(s_arr, s_length);
+				    	stmmr.stem();
+				    	sTwo = stmmr.toString();
+				    	String s = sOne + " " + sTwo;
+				    	s = new StringBuilder(s).reverse().toString();
 				    	//ArrayList<Integer> value = wordAppearances.get(s);
 				    	TreeMap<Integer, ArrayList<Integer>> idsAndPositions = wordAppearances.get(s);
 				    	if (idsAndPositions != null){
@@ -583,23 +721,32 @@ private static byte[] readFileAsBytes(String filePath) {
 		return idsAndPositions;		
 	}
 	
-	static void outputToTxt(TreeMap<String,ArrayList<Integer>> wordAppearances){
+	static void outputToTxtPositional(TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances){
 	    FileWriter writer;
 		try {
 			writer = new FileWriter("output.txt");
-			StringBuilder sb = new StringBuilder();
+			//StringBuilder sb = new StringBuilder();
 			
-			TreeMap<String,ArrayList<Integer>> sortedMap = new TreeMap<>();
-			sortedMap.putAll(wordAppearances);
-			Integer wordID = 1;
-			for (Map.Entry<String,ArrayList<Integer>> entry : sortedMap.entrySet()) {
+			//TreeMap<String,ArrayList<Integer>> sortedMap = new TreeMap<>();
+			//sortedMap.putAll(wordAppearances);
+			Integer wordID = 0;
+			for (Entry<String, TreeMap<Integer, ArrayList<Integer>>> entry : wordAppearances.entrySet()) {
+				/*
 			    for (Integer s : entry.getValue()){
 				    sb.append(s);
 				    sb.append("\t");
 				}
+				*/
+				//TreeMap<Integer, ArrayList<Integer>> docIDPositions = new TreeMap<Integer, ArrayList<Integer>>(entry.getValue());
+				//for (Entry<Integer, ArrayList<Integer>> entryInner : entry.entrySet()) {
+					
+				//}
+				 //ArrayList<Integer> positions = docIDPositions.getValue();
+				//String listString = .stream().map(Object::toString).collect(Collectors.joining(", "));
+			    //String listString = String.join(", ", docIDPositions.getValue());
 			    wordID++;
-	    		writer.write(wordID + " " + entry.getKey() + " : " + sb.toString() + System.lineSeparator());
-	    		sb.setLength(0);
+	    		writer.write(wordID + " " + entry.getKey() + " : " + entry.getValue().toString() + System.lineSeparator());
+	    		//sb.setLength(0);
 	    }
 	    writer.close();
 		} catch (IOException e) {
