@@ -720,11 +720,10 @@ private static byte[] readFileAsBytes(String filePath) {
 		}
 		return idsAndPositions;		
 	}
-	//generatePermutermIndices
+	
 	static TreeMap<String, ArrayList<String>> generateThreeGramIndices(TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances){
 		TreeMap<String, ArrayList<String>> threeGrams = new TreeMap<String, ArrayList<String>>();
 		for (String word : wordAppearances.keySet()) {
-			//if(word.length()>0){
 				String wordLocal = "$" + word + "$";
 				for (int i =0; i < wordLocal.length()-2; i++){
 					//int endIndex = i+2;
@@ -741,9 +740,34 @@ private static byte[] readFileAsBytes(String filePath) {
 						threeGrams.put(partTBA, firstWordForNewKey);
 					}	
 				}
-			//}
 		}
 	return threeGrams;
+	}
+	
+	static TreeMap<String, ArrayList<String>> generatePermutermIndices(TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances){
+		TreeMap<String, ArrayList<String>> permutermIndices = new TreeMap<String, ArrayList<String>>();
+		for (String word : wordAppearances.keySet()) {
+			if(word.length()>0){
+				String wordLocal = word + "$";
+				for (int i =0; i < wordLocal.length(); i++){
+					//String wordLocal = word + "$";
+					String partTBA = wordLocal.substring(0, i);
+					String wordTBA = wordLocal.substring(i).concat(partTBA);
+					if (permutermIndices.containsKey(wordTBA)){
+						ArrayList<String> listOfWordsWithThreeGram = permutermIndices.get(wordTBA);
+						if (!listOfWordsWithThreeGram.contains(word)){
+							listOfWordsWithThreeGram.add(word);
+						}
+					}
+					else {
+						ArrayList<String> firstWordForNewKey = new ArrayList<String>();
+						firstWordForNewKey.add(word);
+						permutermIndices.put(wordTBA, firstWordForNewKey);
+					}	
+				}
+			}
+		}
+	return permutermIndices;
 	}
 	
 	static void outputToTxtPositional(TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances){

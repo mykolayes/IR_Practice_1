@@ -20,6 +20,7 @@ public class tester {
 	static TreeMap<Integer, ArrayList<Integer>> searchResTwo = new TreeMap<Integer, ArrayList<Integer>>();
 	static String toBeF;
 	static TreeMap<String, ArrayList<String>> TriGramIndex = new TreeMap<String, ArrayList<String>>();
+	static TreeMap<String, ArrayList<String>> PermutermIndex = new TreeMap<String, ArrayList<String>>();
 
 	public static void main(String[] args) {
 		//wordAppearances = PDFReader.createDictionaryPositional(file_name,  file_format,  file_path,  words_one_book,  wordAppearances);
@@ -85,7 +86,8 @@ public class tester {
 			
 			//PDFReader.outputToTxtPositional(wordAppearances);
 			
-			TriGramIndex = PDFReader.generateThreeGramIndices(wordAppearances);
+			//TriGramIndex = PDFReader.generateThreeGramIndices(wordAppearances);
+			PermutermIndex = PDFReader.generatePermutermIndices(wordAppearances);
 			
 			System.out.println("Enter words to be found nearby: ");
 			toBeF = scan.nextLine();
