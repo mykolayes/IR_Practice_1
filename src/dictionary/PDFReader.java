@@ -478,19 +478,21 @@ private static byte[] readFileAsBytes(String filePath) {
 			ArrayList<Integer> resTmp = new ArrayList<Integer>();
 			String currBiWordToBeFound = allWordsToBeFound.get(i) + " " + allWordsToBeFound.get(i+1);
 			    	TreeMap<Integer, ArrayList<Integer>> idsAndPositions = wordAppearances.get(currBiWordToBeFound);
-			    	resOneQuery.addAll(idsAndPositions.keySet());
-			    	if (!res.isEmpty()){
-				    	for (int j = 0; j < numOfDocs; j++){
-				    		if(res.contains(j) && resOneQuery.contains(j)){
-				    			resTmp.add(j);
-				    		}
+			    	if (idsAndPositions != null){
+				    	resOneQuery.addAll(idsAndPositions.keySet());
+				    	if (!res.isEmpty()){
+					    	for (int j = 0; j < numOfDocs; j++){
+					    		if(res.contains(j) && resOneQuery.contains(j)){
+					    			resTmp.add(j);
+					    		}
+					    	}
 				    	}
+				    	else {
+				    		resTmp = resOneQuery;
+				    	}
+				//res.addAll(idsAndPositions.keySet());
+				    	res = resTmp;
 			    	}
-			    	else {
-			    		resTmp = resOneQuery;
-			    	}
-			//res.addAll(idsAndPositions.keySet());
-			    	res = resTmp;
 		}
 		//ArrayList<Integer> res = wordAppearances.get(key);
 		
@@ -520,19 +522,21 @@ private static byte[] readFileAsBytes(String filePath) {
 			ArrayList<Integer> resTmp = new ArrayList<Integer>();
 			String currWordToBeFound = allWordsToBeFound.get(i);
 			    	TreeMap<Integer, ArrayList<Integer>> idsAndPositions = wordAppearances.get(currWordToBeFound);
-			    	resOneQuery.addAll(idsAndPositions.keySet());
-			    	if (!res.isEmpty()){
-				    	for (int j = 0; j < numOfDocs; j++){
-				    		if(res.contains(j) && resOneQuery.contains(j)){
-				    			resTmp.add(j);
-				    		}
+			    	if (idsAndPositions != null){
+				    	resOneQuery.addAll(idsAndPositions.keySet());
+				    	if (!res.isEmpty()){
+					    	for (int j = 0; j < numOfDocs; j++){
+					    		if(res.contains(j) && resOneQuery.contains(j)){
+					    			resTmp.add(j);
+					    		}
+					    	}
 				    	}
+				    	else {
+				    		resTmp = resOneQuery;
+				    	}
+				//res.addAll(idsAndPositions.keySet());
+				    	res = resTmp;
 			    	}
-			    	else {
-			    		resTmp = resOneQuery;
-			    	}
-			//res.addAll(idsAndPositions.keySet());
-			    	res = resTmp;
 		}
 		//ArrayList<Integer> res = wordAppearances.get(key);
 		
@@ -605,7 +609,8 @@ private static byte[] readFileAsBytes(String filePath) {
 		String currWordToBeFound = allWordsToBeFound.get(0) + " " + allWordsToBeFound.get(1);
 		TreeMap<Integer, ArrayList<Integer>> idsAndPositions = wordAppearances.get(currWordToBeFound); //global res
 		
-		if (idsAndPositions.isEmpty()){ //if idsAndPositions is empty => no docs found.
+		//if (idsAndPositions.isEmpty()){ 
+		if (idsAndPositions != null){ //if idsAndPositions is empty => no docs found.
 			return idsAndPositions; 
 		}
 		
@@ -675,7 +680,8 @@ private static byte[] readFileAsBytes(String filePath) {
 		String currWordToBeFound = allWordsToBeFound.get(0);
 		TreeMap<Integer, ArrayList<Integer>> idsAndPositions = wordAppearances.get(currWordToBeFound); //global res
 		
-		if (idsAndPositions.isEmpty()){ //if idsAndPositions is empty => no docs found.
+		//if (idsAndPositions.isEmpty()){ 
+		if (idsAndPositions != null){ //if idsAndPositions is empty => no docs found.
 			return idsAndPositions; 
 		}
 		
@@ -768,6 +774,70 @@ private static byte[] readFileAsBytes(String filePath) {
 			}
 		}
 	return permutermIndices;
+	}
+	
+	static ArrayList<Integer> findPermutermVocab(TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances, TreeMap<String, ArrayList<String>> permIndex, String toBeFound){
+		//String resWord = "";
+		ArrayList<Integer> foundInDocs = new ArrayList<Integer>();
+		/*
+		StringBuilder stringBuilder = new StringBuilder();
+
+		stringBuilder.append("Some text");
+		stringBuilder.append("Some text");
+		stringBuilder.append("Some text");
+
+		String finalString = stringBuilder.toString();
+		*/
+		String toBeFoundLocal = "$" + toBeFound;
+		int subStrBeginIndex = toBeFoundLocal.lastIndexOf("*");
+		if (subStrBeginIndex == -1){
+			return foundInDocs;
+		}
+		String movedPart = toBeFoundLocal.substring(subStrBeginIndex, toBeFoundLocal.length());
+		toBeFoundLocal = toBeFoundLocal.substring(0, subStrBeginIndex);
+		toBeFoundLocal = movedPart.concat(toBeFoundLocal).replace("*", "");
+		//became 'n$m' form
+		//now we need to get all keys from permIndex which match the given pattern, and then combine their values
+		
+		//ArrayList<String> finalWordsToBeFound = permIndex.get(toBeFoundLocal);
+		ArrayList<String> finalWordsToBeFound = new ArrayList<String>();
+		
+		 for (Entry<String, ArrayList<String>> entry : permIndex.entrySet()) {
+		    //for (String s : entry.getKey()) {
+			 String currKey = entry.getKey();
+		        if (currKey.startsWith(toBeFoundLocal)) {
+		            //System.out.println(entry.getKey());
+		        	ArrayList<String> currWordsToBeFound = entry.getValue();
+		        	for (String s : currWordsToBeFound){
+		        		if (!finalWordsToBeFound.contains(s)){
+		        			finalWordsToBeFound.add(s);
+		        		}
+		        	}
+		            //break;
+		        }
+		    //}
+		}
+		 
+		
+		
+		if (!finalWordsToBeFound.isEmpty()){
+			for (int i = 0; i < finalWordsToBeFound.size(); i++){
+				ArrayList<Integer> foundInDocsCurrentWord = FindPositionalPhrasal(wordAppearances, finalWordsToBeFound.get(i));
+				if (!foundInDocsCurrentWord.isEmpty()){
+					for (int j = 0; j < foundInDocsCurrentWord.size(); j++){
+						Integer docID = foundInDocsCurrentWord.get(j);
+						if (!foundInDocs.contains(docID)){
+							foundInDocs.add(docID);
+						}
+					}
+				}
+			}
+		}
+		
+		
+		
+		//foundInDocs = FindPositionalPhrasal(wordAppearances, resWord);
+		return foundInDocs;
 	}
 	
 	static void outputToTxtPositional(TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances){
