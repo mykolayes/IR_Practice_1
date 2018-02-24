@@ -85,14 +85,17 @@ public class tester {
 			*/
 			
 			//PDFReader.outputToTxtPositional(wordAppearances);
-			
+	/*		
+			//PRACTICE 4 3-GRAM & PERMUTERM INDICES + PERMUTERM INDEX JOKER SEARCH
 			//TriGramIndex = PDFReader.generateThreeGramIndices(wordAppearances);
 			PermutermIndex = PDFReader.generatePermutermIndices(wordAppearances);
-			
-			searchRes = PDFReader.findPermutermVocab(wordAppearances, PermutermIndex, "m*n");
+			System.out.println("Enter a word to be found: ");
+			toBeF = scan.nextLine();
+			searchRes = PDFReader.findPermutermVocab(wordAppearances, PermutermIndex, toBeF); //"m*n"
 			System.out.println("Given word was found in following documents: " + searchRes);
+	*/		
+			 //PRACTICE 3 TEST BLOCK FOR POSITIONAL 'NEAR' SEARCH
 			
-			/* PRACTICE 3 TEST BLOCK FOR POSITIONAL 'NEAR' SEARCH
 			System.out.println("Enter words to be found nearby: ");
 			toBeF = scan.nextLine();
 			System.out.println("Enter proximity (how close they should be to each other): ");
@@ -108,7 +111,7 @@ public class tester {
 				//	System.out.println("Given words were not found in document #" + i + ".");
 				//}
 			}
-			*/
+			
 			 
 			
 			

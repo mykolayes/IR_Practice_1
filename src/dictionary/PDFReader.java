@@ -461,14 +461,15 @@ private static byte[] readFileAsBytes(String filePath) {
 		toBeFound = toBeFound.toLowerCase(); 
 	   List<String> allWordsToBeFound = Arrays.asList(toBeFound.split("\\s+"));
 
-		for (String s : allWordsToBeFound){
+	   for (int i = 0; i < allWordsToBeFound.size(); i++){
+		   String s = allWordsToBeFound.get(i);
 	    	Stemmer stmmr = new Stemmer();
 	    	char[] s_arr = s.toCharArray();
 	    	int s_length = s.length();
 	    	stmmr.add(s_arr, s_length);
 	    	stmmr.stem();
 	    	s = stmmr.toString();
-	    	//allWordsToBeFound.
+	    	allWordsToBeFound.set(i, s);
 		}
 		ArrayList<Integer> res = new ArrayList<Integer>();
 		//boolean found = false;
@@ -505,14 +506,15 @@ private static byte[] readFileAsBytes(String filePath) {
 		toBeFound = toBeFound.toLowerCase(); 
 	   List<String> allWordsToBeFound = Arrays.asList(toBeFound.split("\\s+"));
 
-		for (String s : allWordsToBeFound){
+	   for (int i = 0; i < allWordsToBeFound.size(); i++){
+		   String s = allWordsToBeFound.get(i);
 	    	Stemmer stmmr = new Stemmer();
 	    	char[] s_arr = s.toCharArray();
 	    	int s_length = s.length();
 	    	stmmr.add(s_arr, s_length);
 	    	stmmr.stem();
 	    	s = stmmr.toString();
-	    	//allWordsToBeFound.
+	    	allWordsToBeFound.set(i, s);
 		}
 		ArrayList<Integer> res = new ArrayList<Integer>();
 		//boolean found = false;
@@ -594,14 +596,15 @@ private static byte[] readFileAsBytes(String filePath) {
 	   //int amountOfWordsToBeFound = allWordsToBeFound.size();
 	   //int wordFoundYesNo[] = new int[amountOfWordsToBeFound];
 	   
-		for (String s : allWordsToBeFound){
+	   for (int i = 0; i < allWordsToBeFound.size(); i++){
+		   String s = allWordsToBeFound.get(i);
 	    	Stemmer stmmr = new Stemmer();
 	    	char[] s_arr = s.toCharArray();
 	    	int s_length = s.length();
 	    	stmmr.add(s_arr, s_length);
 	    	stmmr.stem();
 	    	s = stmmr.toString();
-	    	//allWordsToBeFound.
+	    	allWordsToBeFound.set(i, s);
 		}
 		//TreeMap<Integer, ArrayList<Integer>> nothingFound = new TreeMap<Integer, ArrayList<Integer>>();
 		//boolean found = false;
@@ -666,14 +669,15 @@ private static byte[] readFileAsBytes(String filePath) {
 	   //int amountOfWordsToBeFound = allWordsToBeFound.size();
 	   //int wordFoundYesNo[] = new int[amountOfWordsToBeFound];
 	   
-		for (String s : allWordsToBeFound){
+	   for (int i = 0; i < allWordsToBeFound.size(); i++){
+		   String s = allWordsToBeFound.get(i);
 	    	Stemmer stmmr = new Stemmer();
 	    	char[] s_arr = s.toCharArray();
 	    	int s_length = s.length();
 	    	stmmr.add(s_arr, s_length);
 	    	stmmr.stem();
 	    	s = stmmr.toString();
-	    	//allWordsToBeFound.
+	    	allWordsToBeFound.set(i, s);
 		}
 		//TreeMap<Integer, ArrayList<Integer>> nothingFound = new TreeMap<Integer, ArrayList<Integer>>();
 		//boolean found = false;
@@ -681,7 +685,7 @@ private static byte[] readFileAsBytes(String filePath) {
 		TreeMap<Integer, ArrayList<Integer>> idsAndPositions = wordAppearances.get(currWordToBeFound); //global res
 		
 		//if (idsAndPositions.isEmpty()){ 
-		if (idsAndPositions != null){ //if idsAndPositions is empty => no docs found.
+		if (idsAndPositions == null){ //if idsAndPositions is empty => no docs found.
 			return idsAndPositions; 
 		}
 		
