@@ -793,12 +793,13 @@ private static byte[] readFileAsBytes(String filePath) {
 		String finalString = stringBuilder.toString();
 		*/
 		String toBeFoundLocal = "$" + toBeFound;
-		int subStrBeginIndex = toBeFoundLocal.lastIndexOf("*");
+		int subStrBeginIndex = toBeFoundLocal.lastIndexOf("*"); //last joker
 		if (subStrBeginIndex == -1){
 			return foundInDocs;
 		}
 		String movedPart = toBeFoundLocal.substring(subStrBeginIndex, toBeFoundLocal.length());
-		toBeFoundLocal = toBeFoundLocal.substring(0, subStrBeginIndex);
+		int subStrEndIndex = toBeFoundLocal.indexOf("*"); //first joker
+		toBeFoundLocal = toBeFoundLocal.substring(0, subStrEndIndex); // was till subStrBeginIndex
 		toBeFoundLocal = movedPart.concat(toBeFoundLocal).replace("*", "");
 		//became 'n$m' form
 		//now we need to get all keys from permIndex which match the given pattern, and then combine their values
@@ -821,7 +822,42 @@ private static byte[] readFileAsBytes(String filePath) {
 		        }
 		    //}
 		}
-		 
+		//post-filtration of the found res-strings
+		 ArrayList<String> postFinalWordsToBeFound = new ArrayList<String>();
+		 //postFinalWordsToBeFound = finalWordsToBeFound;
+		 String toBeFoundFilter = toBeFound;
+		 int numOfJokers = toBeFoundFilter.length() - toBeFoundFilter.replace("*", "").length();
+		 if (numOfJokers > 1 && !finalWordsToBeFound.isEmpty()){ //check whether there were > 1 joker in the initial query + if we found any suitable words to post-filter
+			 String begOfTheWord = toBeFoundFilter.substring(0, toBeFoundFilter.indexOf("*"));
+			 String endOfTheWord = toBeFoundFilter.substring(toBeFoundFilter.lastIndexOf("*")+1, toBeFoundFilter.length());
+				 for (int i = 0; i < finalWordsToBeFound.size(); i++){
+					 String currFoundWord = finalWordsToBeFound.get(i);
+					 String currFoundWordMiddle = currFoundWord.substring(begOfTheWord.length(), currFoundWord.length() - endOfTheWord.length());
+							 
+							 
+					 int currJokerPos = toBeFoundFilter.indexOf("*");
+					 int nextJokerPos = toBeFoundFilter.indexOf("*", currJokerPos+1); //can go to -1, but we don't care as we have a fixated lastJokerPos
+					 int lastJokerPos = toBeFoundFilter.lastIndexOf("*");
+					 while (currJokerPos != lastJokerPos){
+						 String templateStr = toBeFoundFilter.substring(currJokerPos+1, nextJokerPos); //letters between curr and next jokers
+						 if (currFoundWordMiddle.contains(templateStr)){
+							 currFoundWordMiddle = currFoundWordMiddle.substring(currFoundWordMiddle.indexOf(templateStr)+templateStr.length(), currFoundWordMiddle.length());
+							 
+							 currJokerPos = toBeFoundFilter.indexOf("*", currJokerPos+1);
+							 nextJokerPos = toBeFoundFilter.indexOf("*", nextJokerPos+1);
+							 if (nextJokerPos == -1){
+								 postFinalWordsToBeFound.add(currFoundWord);
+							 }
+						 }
+						 else {
+							 //postFinalWordsToBeFound.remove(i);
+							 break;
+						 }
+					 }
+				 }
+				 //finalWordsToBeFound = new ArrayList<String>(postFinalWordsToBeFound);
+				 finalWordsToBeFound = postFinalWordsToBeFound;
+		 }
 		
 		
 		if (!finalWordsToBeFound.isEmpty()){
