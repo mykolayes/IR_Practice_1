@@ -1,6 +1,9 @@
 /*Yeshchenko Mykola, FI-2*/
 package dictionary;
+import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.TreeMap;
 import java.util.List;
 import java.util.Scanner;
@@ -9,7 +12,7 @@ import dictionary.PDFReader;
 
 
 public class tester {
-	static String file_name = "", file_format = ".pdf", file_path = "src/books/";
+	static String file_name = "", file_format = ".pdf", file_path = /*"src/books/"*/ /*"C:/Users/Sergey/Downloads/Dev/IR/gutenberg_txt/gutenberg_txt/gutenberg"*/ "C:/Users/Sergey/Downloads/Dev/IR/gutenberg_txt/gutenberg_txt/gutenberg/1/0/0/0/10007";
 	static List<String> words_one_book;
 	//static ArrayList<String> words = new ArrayList<String>();
 	
@@ -71,7 +74,8 @@ public class tester {
 			*/
 			
 			/** Positional */
-			wordAppearances = PDFReader.createDictionaryPositional(file_name,  file_format,  file_path,  words_one_book,  wordAppearances);
+			//wordAppearances = PDFReader.createDictionaryPositional(file_name,  file_format,  file_path,  words_one_book,  wordAppearances);
+			
 			/*
 			System.out.println("Enter a phrase to be found: ");
 			toBeF = scan.nextLine();
@@ -85,7 +89,7 @@ public class tester {
 			*/
 			
 			//PDFReader.outputToTxtPositional(wordAppearances);
-			
+		/*	
 			//PRACTICE 4 3-GRAM & PERMUTERM INDICES + PERMUTERM INDEX JOKER SEARCH
 			//TriGramIndex = PDFReader.generateThreeGramIndices(wordAppearances);
 			PermutermIndex = PDFReader.generatePermutermIndices(wordAppearances);
@@ -93,7 +97,7 @@ public class tester {
 			toBeF = scan.nextLine();
 			searchRes = PDFReader.findPermutermVocab(wordAppearances, PermutermIndex, toBeF); //"m*n"
 			System.out.println("Given word was found in following documents: " + searchRes);
-			
+		*/	
 			 //PRACTICE 3 TEST BLOCK FOR POSITIONAL 'NEAR' SEARCH
 	/*		
 			System.out.println("Enter words to be found nearby: ");
@@ -112,7 +116,28 @@ public class tester {
 				//}
 			}
 	*/		
-			 
+			 /**Practice 5 */
+			/*
+			boolean x1 = true;
+			boolean x2 = false;
+			System.out.println("true looks like: " + x1);
+			System.out.println("false looks like: " + x2);
+			*/
+			String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+			System.out.println(timeStamp);
+			
+			ArrayList<File> textFilesNames = new ArrayList<File>();
+			PDFReader.getFilesNames(file_path, textFilesNames);
+			System.out.println("The amount of files to be indexed is: " + PDFReader.numOfDocs);
+			PDFReader.createTxtDictionary(textFilesNames);
+			timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+			System.out.println(timeStamp);
+			//System.out.println(System.currentTimeMillis());
+			//System.out.println(Runtime.getRuntime().maxMemory());
+			//System.out.println(Runtime.getRuntime().totalMemory());
+			
+			
+			
 			
 			
 			

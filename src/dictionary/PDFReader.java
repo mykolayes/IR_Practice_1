@@ -1,14 +1,22 @@
 /*Yeshchenko Mykola, FI-2*/
 package dictionary;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FilenameFilter;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.Map.Entry;
+import java.util.Scanner;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.HashSet;
 import java.util.List;
@@ -16,6 +24,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -23,7 +32,8 @@ import org.apache.pdfbox.text.PDFTextStripper;
 
 
 public class PDFReader {
-	static int numOfDocs;
+	static Integer numOfDocs;
+	static int currBlock;
 	/*
 	public static String convertPDFToTxt(String filePath) {
         byte[] thePDFFileBytes = readFileAsBytes(filePath);
@@ -54,6 +64,352 @@ private static byte[] readFileAsBytes(String filePath) {
 		   }
 		}
 	    return txt;
+	}
+	
+	static void getFilesNames(String directoryName, ArrayList<File> files) {
+	    File directory = new File(directoryName);
+
+	    // get all the files from a directory
+	    File[] fList = directory.listFiles();
+	    for (File file : fList) {
+	        if (file.isFile()) {
+	            files.add(file);
+	        } else if (file.isDirectory()) {
+	        	getFilesNames(file.getAbsolutePath(), files);
+	        }
+	    }
+	    numOfDocs = files.size();
+	    return;
+	}
+	
+	static void outputChunk(TreeMap<String, ArrayList<Integer>> wordsOneFile){
+	    FileWriter writer;
+		try {
+			writer = new FileWriter("chunk" + currBlock + ".txt");
+			//StringBuilder sb = new StringBuilder();
+			//Integer wordID = 0;
+			for (Entry<String, ArrayList<Integer>> entry : wordsOneFile.entrySet()) {
+				writer.write(entry.getKey() + " : " + entry.getValue().toString() + System.lineSeparator());
+	    }
+	    writer.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return;
+	}
+
+	
+	static void createTxtDictionary(ArrayList<File> textFilesNames){
+		  String file_name = "", file_format = ".txt";
+		//1. Get names of all .txt files.
+		  /*
+		 List<String> textFilesNames = new ArrayList<String>();
+		  File dir = new File(file_path);
+		  for (File file : dir.listFiles()) {
+		    if (file.getName().endsWith((file_format))) {
+		      textFilesNames.add(file.getName());
+		    }
+		  }
+		  */
+		  //ArrayList<File> textFilesNames = new ArrayList<File>();
+		  //getFilesNames(file_path, textFilesNames);
+		  //numOfDocs = textFilesNames.size();
+		  Integer approxSpaceUsed = 0;
+		  currBlock = 1;/*, currFile = 1*/
+		  Integer maxBlockSize = 300000; // 1 mb 1000000
+		  TreeMap<String, ArrayList<Integer>> wordsOneFile = new TreeMap<String, ArrayList<Integer>>();
+		//2. Read all the files and create index.
+		  for (int i = 0; i < numOfDocs; i++){
+			  //file_name = file_path + textFilesNames.get(i);
+			  file_name = textFilesNames.get(i).getAbsolutePath();
+			  FileInputStream inputStream = null;
+			  Scanner sc = null;
+			  try {
+			      try {
+					inputStream = new FileInputStream(file_name);
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			      sc = new Scanner(inputStream, "UTF-8");
+			      while (sc.hasNext()) {
+			          String word = sc.next();
+			          word = word.toLowerCase();
+			          word = word.replaceAll("[^a-z ]+",""); //word = word.replaceAll("[^a-z '-]+","");
+
+				
+			          if (!word.isEmpty()){
+				          //+stem
+					    	Stemmer stmmr = new Stemmer();
+					    	char[] s_arr = word.toCharArray();
+					    	int s_length = word.length();
+					    	stmmr.add(s_arr, s_length);
+					    	stmmr.stem();
+					    	word = stmmr.toString();
+					    	if (approxSpaceUsed < maxBlockSize){ //6553600 1073741824
+			        	  //if (Runtime.getRuntime().maxMemory() - Runtime.getRuntime().totalMemory() > 100000000){ // > 100 mb ram for jvm left	  
+			        	  //check and add if not present
+			        		  if (!wordsOneFile.containsKey(word)){
+			        			  ArrayList<Integer> keys = new ArrayList<Integer>();
+			        			  keys.add(i);
+			        			  wordsOneFile.put(word, keys);
+			        			  approxSpaceUsed += 12;
+			        		  }
+			        		  else {
+			        			  ArrayList<Integer> keys = wordsOneFile.get(word);
+			        			  if (!keys.contains(i)){
+			        				  keys.add(i);
+			        			  }
+			        			  approxSpaceUsed += 4;
+			        		  }
+			        	  }
+			        	  else{
+			        		//output to the next file and switch to a new treemap
+			        		  outputChunk(wordsOneFile);
+
+			        		  //writer.write(entry.getKey() + " : " + entry.getValue().toString() + System.lineSeparator());
+			        		  
+			        		  approxSpaceUsed = 0;
+			        		  currBlock++;
+			        		  wordsOneFile.clear();
+			        		  //+add last word to the new treemap
+		        			  ArrayList<Integer> keys = new ArrayList<Integer>();
+		        			  keys.add(i);
+		        			  wordsOneFile.put(word, keys);
+			        	  }
+			          }
+			      }
+			      
+			      
+			      
+			      
+			      
+			      
+			      // note that Scanner suppresses exceptions
+			      if (sc.ioException() != null) {
+			          try {
+						throw sc.ioException();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+			      }
+			  } finally {
+			      if (inputStream != null) {
+			          try {
+						inputStream.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+			      }
+			      if (sc != null) {
+			          sc.close();
+			      }
+			  }
+		  }
+		  outputChunk(wordsOneFile); //last part
+		  //now we need to create 1 index from separate files (chunks).
+		  /*
+		  FileInputStream[] myFileInputStreams = new FileInputStream[currBlock];
+		  Scanner[] myScanners = new Scanner[currBlock];
+		  */
+		  //move 1-st chunk to the final index file
+		  TreeMap<String, ArrayList<Integer>> currProcBlock = new TreeMap<String, ArrayList<Integer>>();
+		  String currWord = "", currDocIDs = "";
+		  try (BufferedReader br = new BufferedReader(new FileReader("chunk1.txt"))) {
+			    String line;
+			    while ((line = br.readLine()) != null) {
+			    	if (!line.isEmpty()){ // && line != ""
+				    	currWord = line.substring(0, line.indexOf(":")-1); //word
+				    	currDocIDs = line.substring(line.indexOf(":")+3, line.indexOf("]")); //comma-separated docIDs
+				    	currDocIDs = currDocIDs.replace(",", "");
+				    	String[] docIDs = currDocIDs.split(" ");
+				    	ArrayList<Integer> currDocIDsArr = new ArrayList<Integer>(); //array of existing docIDs for the word
+				    	for (int i = 0; i < docIDs.length; i++){
+				    		currDocIDsArr.add(Integer.parseInt(docIDs[i]));
+				    	}
+				    	currProcBlock.put(currWord, currDocIDsArr);
+			    	}
+			    }
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}	
+		  //now output currProcBlock to final index file //////, and begin opening all the following blocks - each should be checked word by word if it is already in the final index; if yes - we should analyse the docIDs, and modify (add new) if needed; rewrite to the file afterwards
+		  boolean currFinIndID = true;  
+		  FileWriter writer;
+			try {
+				writer = new FileWriter("finalIndex" + currFinIndID + ".txt");
+				//StringBuilder sb = new StringBuilder();
+				//Integer wordID = 0;
+				for (Entry<String, ArrayList<Integer>> entry : currProcBlock.entrySet()) {
+					writer.write(entry.getKey() + " : " + entry.getValue().toString() + System.lineSeparator());
+		    }
+		    writer.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		  //begin opening all the following blocks - each should be checked word by word if it is already in the final index; if yes - we should analyse the docIDs, and modify (add new) if needed; rewrite to the file afterwards
+		  if (currBlock > 1){
+			  
+			  for (int i = 2; i <= currBlock; i++){
+				  //read next block into memory
+				  currProcBlock.clear();
+				  try (BufferedReader br = new BufferedReader(new FileReader("chunk" + i + ".txt"))) {
+					    String line;
+					    while ((line = br.readLine()) != null) {
+					    	if (!line.isEmpty()){ // && line != ""
+						    	currWord = line.substring(0, line.indexOf(":")-1); //word
+						    	currDocIDs = line.substring(line.indexOf(":")+3, line.indexOf("]")); //comma-separated docIDs
+						    	currDocIDs = currDocIDs.replace(",", "");
+						    	String[] docIDs = currDocIDs.split(" ");
+						    	ArrayList<Integer> currDocIDsArr = new ArrayList<Integer>(); //array of existing docIDs for the word
+						    	for (int j = 0; j < docIDs.length; j++){
+						    		currDocIDsArr.add(Integer.parseInt(docIDs[j]));
+						    	}
+						    	currProcBlock.put(currWord, currDocIDsArr);
+					    	}
+					    }
+					} catch (FileNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}	
+				  //after opening next block and writing it to memory (currProcBlock), we need to check words in finalIndex and change docIDs / add new words if needed.
+				  for (Entry<String, ArrayList<Integer>> entry : currProcBlock.entrySet()) {  
+					String currNewWord = entry.getKey();
+					ArrayList<Integer> currNewDocIDsArr = entry.getValue();
+					boolean exch = false;
+
+				    FileWriter writer2;
+					try {
+						writer2 = new FileWriter("finalIndex" + !currFinIndID + ".txt");
+						//StringBuilder sb = new StringBuilder();
+						//Integer wordID = 0;
+						//for (Entry<String, ArrayList<Integer>> entry2 : currProcBlock.entrySet()) {
+						//	writer2.write(entry2.getKey() + " : " + entry2.getValue().toString() + System.lineSeparator());
+						//}
+						//writer2.close();
+
+					
+					//opening finInd and parsing it line by line
+					  try (BufferedReader br = new BufferedReader(new FileReader("finalIndex" + currFinIndID + ".txt"))) {
+						    String line;
+						    while ((line = br.readLine()) != null) {
+						    	if (!line.isEmpty()){ // && line != ""
+							    	currWord = line.substring(0, line.indexOf(":")-1); //word
+							    	
+							    	if(!exch && currWord.compareTo(currNewWord) == 0){ //currWord == currNewWord
+							    		//retrieve old docIDs
+								    	currDocIDs = line.substring(line.indexOf(":")+3, line.indexOf("]")); //comma-separated docIDs
+								    	currDocIDs = currDocIDs.replace(",", "");
+								    	String[] docIDs = currDocIDs.split(" ");
+								    	ArrayList<Integer> currDocIDsArr = new ArrayList<Integer>(); //array of existing docIDs for the word
+								    	for (int j = 0; j < docIDs.length; j++){
+								    		currDocIDsArr.add(Integer.parseInt(docIDs[j]));
+								    	}
+								    	/*//currProcBlock.put(currWord, currDocIDsArr);*/
+								    	
+								    	//merge docIDs and write to new file
+								    	Set<Integer> mergedIDsSet = new LinkedHashSet<Integer>(currDocIDsArr);
+								    	mergedIDsSet.addAll(currNewDocIDsArr);
+								    	ArrayList<Integer> mergedIDsArr = new ArrayList<Integer>(mergedIDsSet);
+								    	writer2.write(currWord + " : " + mergedIDsArr.toString() + System.lineSeparator());
+								    	exch = true;
+							    	}
+							    	else if(!exch && currWord.compareTo(currNewWord) > 0){
+							    		//insert word in case it's not in there (check alphabetically) and write to new
+							    		writer2.write(currNewWord + ":" + currNewDocIDsArr.toString() + System.lineSeparator()); //new word
+							    		writer2.write(line + System.lineSeparator()); //old word moved to the next line
+							    		exch = true;
+							    	}
+							    	else {
+							    		//copy from old finInd to new
+							    		writer2.write(line + System.lineSeparator());
+							    	}
+						    	}
+						    }
+						} catch (FileNotFoundException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					//del old finInd with curr ID
+					exch = false;
+					File toDel = new File("finalIndex" + currFinIndID + ".txt");
+					toDel.delete();
+					  currFinIndID = !currFinIndID;
+					  writer2.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				  
+					
+						
+				  }
+				  
+				  
+				  
+				    
+			  }		  
+		  }
+			
+			
+			
+			
+/*		  
+		  //for (int i = 1; i <= currBlock; i++){
+			  FileInputStream inputStream = null;
+			  Scanner sc = null;
+			  try {
+			      try {
+					inputStream = new FileInputStream(file_name);
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			      sc = new Scanner(inputStream, "UTF-8");
+			      // note that Scanner suppresses exceptions
+			      if (sc.ioException() != null) {
+			          try {
+						throw sc.ioException();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+			      }
+			  } finally {
+			      if (inputStream != null) {
+			          try {
+						inputStream.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+			      }
+			      if (sc != null) {
+			          sc.close();
+			      }
+			  }
+		  //}
+*/ 	  
+		  
+			  
+		  
+		  
+		  return;
 	}
 	
 	static TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> createDictionaryPositional(String file_name, String file_format, String file_path, List<String> words_one_book, TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances) {
