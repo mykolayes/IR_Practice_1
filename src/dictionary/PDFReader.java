@@ -209,206 +209,177 @@ private static byte[] readFileAsBytes(String filePath) {
 			      }
 			  }
 		  }
-		  outputChunk(wordsOneFile); //last part
+		  outputChunk(wordsOneFile); //last part		  
 		  //now we need to create 1 index from separate files (chunks).
 		  /*
 		  FileInputStream[] myFileInputStreams = new FileInputStream[currBlock];
 		  Scanner[] myScanners = new Scanner[currBlock];
 		  */
-		  //move 1-st chunk to the final index file
-		  TreeMap<String, ArrayList<Integer>> currProcBlock = new TreeMap<String, ArrayList<Integer>>();
-		  String currWord = "", currDocIDs = "";
-		  try (BufferedReader br = new BufferedReader(new FileReader("chunk1.txt"))) {
-			    String line;
-			    while ((line = br.readLine()) != null) {
-			    	if (!line.isEmpty()){ // && line != ""
-				    	currWord = line.substring(0, line.indexOf(":")-1); //word
-				    	currDocIDs = line.substring(line.indexOf(":")+3, line.indexOf("]")); //comma-separated docIDs
-				    	currDocIDs = currDocIDs.replace(",", "");
-				    	String[] docIDs = currDocIDs.split(" ");
-				    	ArrayList<Integer> currDocIDsArr = new ArrayList<Integer>(); //array of existing docIDs for the word
-				    	for (int i = 0; i < docIDs.length; i++){
-				    		currDocIDsArr.add(Integer.parseInt(docIDs[i]));
-				    	}
-				    	currProcBlock.put(currWord, currDocIDsArr);
-			    	}
-			    }
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}	
-		  //now output currProcBlock to final index file //////, and begin opening all the following blocks - each should be checked word by word if it is already in the final index; if yes - we should analyse the docIDs, and modify (add new) if needed; rewrite to the file afterwards
-		  boolean currFinIndID = true;  
+		  
+		  /* MERGE */
+		  
+		  //create arr for readers and open all the chunks
+		  BufferedReader[] arrChunksReaders = new BufferedReader[currBlock];
+		  
+		  //set buffer size here maybe so that we can backtrack to the beginning of the line easily (may be really long one)
+		  //maybe +2,147,483,647 is too much for my index. => 483647 - current size limit for one line of the index in chunks.
+		  int BufferSize = Integer.MAX_VALUE - 2147000000;
+			  try {
+				  for (int i = 0; i < currBlock; i++){
+					arrChunksReaders[i] = new BufferedReader(new FileReader("chunk" + (i+1) + ".txt"), BufferSize);
+				  }
+
+	
+		 
+		  //create writer for finalIndex
 		  FileWriter writer;
 			try {
-				writer = new FileWriter("finalIndex" + currFinIndID + ".txt");
+				writer = new FileWriter("finalIndex.txt"); //"finalIndex" + ".txt"
 				//StringBuilder sb = new StringBuilder();
 				//Integer wordID = 0;
-				for (Entry<String, ArrayList<Integer>> entry : currProcBlock.entrySet()) {
-					writer.write(entry.getKey() + " : " + entry.getValue().toString() + System.lineSeparator());
-		    }
-		    writer.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+
+		
+			//start checking all the files line by line to:
+			//1) find the first term in alphabetical order
+			//2) combine all the found data about given word
+			//3) output it to the final index
+			//4) and go to next line (if exists) in those blocks, where we read the data
 			
-		  //begin opening all the following blocks - each should be checked word by word if it is already in the final index; if yes - we should analyse the docIDs, and modify (add new) if needed; rewrite to the file afterwards
-		  if (currBlock > 1){
-			  
-			  for (int i = 2; i <= currBlock; i++){
-				  //read next block into memory
-				  currProcBlock.clear();
-				  try (BufferedReader br = new BufferedReader(new FileReader("chunk" + i + ".txt"))) {
-					    String line;
-					    while ((line = br.readLine()) != null) {
-					    	if (!line.isEmpty()){ // && line != ""
-						    	currWord = line.substring(0, line.indexOf(":")-1); //word
-						    	currDocIDs = line.substring(line.indexOf(":")+3, line.indexOf("]")); //comma-separated docIDs
-						    	currDocIDs = currDocIDs.replace(",", "");
-						    	String[] docIDs = currDocIDs.split(" ");
-						    	ArrayList<Integer> currDocIDsArr = new ArrayList<Integer>(); //array of existing docIDs for the word
-						    	for (int j = 0; j < docIDs.length; j++){
-						    		currDocIDsArr.add(Integer.parseInt(docIDs[j]));
-						    	}
-						    	currProcBlock.put(currWord, currDocIDsArr);
-					    	}
-					    }
-					} catch (FileNotFoundException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+			//1)
+			//an array of bools to indicate that those blocks were parsed
+			//boolean[] chunksParsed = new boolean[currBlock];
+			boolean finished = false;
+			String currWordToBeOutput = "", currDocIDsToBeOutput = "";
+			ArrayList<Integer> currIDsToBeOutputArr = new ArrayList<Integer>();
+			
+			while (!finished){
+				//find next word to output
+				for (int i = 0; i < currBlock; i++){
+					try {
+						//read and return the cursor to the beginning of the line
+						arrChunksReaders[i].mark(BufferSize);
+						String currLine = arrChunksReaders[i].readLine();
+						arrChunksReaders[i].reset();
+						if (currLine != null && !currLine.isEmpty()){ //TODO: tmp check if null needed
+							
+							if (currWordToBeOutput.isEmpty()){
+								//initiate next word if it can not be compared yet (every first currWord after the prev. one was output + first in general)
+								currWordToBeOutput = currLine.substring(0, currLine.indexOf(":")-1);
+							}
+							else{
+								String currWordToBeCompared = currLine.substring(0, currLine.indexOf(":")-1);
+								if (currWordToBeCompared.compareTo(currWordToBeOutput) < 0){
+									currWordToBeOutput = currWordToBeCompared;
+								}
+							}
+						}
+						else {
+							//chunksParsed[i] = true;
+							if (i == currBlock -1 && currWordToBeOutput == ""){
+								finished = true;
+							}
+						}
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
-					}	
-				  //after opening next block and writing it to memory (currProcBlock), we need to check words in finalIndex and change docIDs / add new words if needed.
-				  for (Entry<String, ArrayList<Integer>> entry : currProcBlock.entrySet()) {  
-					String currNewWord = entry.getKey();
-					ArrayList<Integer> currNewDocIDsArr = entry.getValue();
-					boolean exch = false;
-
-				    FileWriter writer2;
-					try {
-						writer2 = new FileWriter("finalIndex" + !currFinIndID + ".txt");
-						//StringBuilder sb = new StringBuilder();
-						//Integer wordID = 0;
-						//for (Entry<String, ArrayList<Integer>> entry2 : currProcBlock.entrySet()) {
-						//	writer2.write(entry2.getKey() + " : " + entry2.getValue().toString() + System.lineSeparator());
-						//}
-						//writer2.close();
-
+					}
+							
+				}
+				//check whether there are words left in chunks (bool finished)
+				//if yes (finished == false) => output next word and make the currWord empty once again, so we can get the next term
+				//if no - close the writer and all the readers.
+				if (finished == true){
+					writer.close();
 					
-					//opening finInd and parsing it line by line
-					  try (BufferedReader br = new BufferedReader(new FileReader("finalIndex" + currFinIndID + ".txt"))) {
-						    String line;
-						    while ((line = br.readLine()) != null) {
-						    	if (!line.isEmpty()){ // && line != ""
-							    	currWord = line.substring(0, line.indexOf(":")-1); //word
-							    	
-							    	if(!exch && currWord.compareTo(currNewWord) == 0){ //currWord == currNewWord
-							    		//retrieve old docIDs
-								    	currDocIDs = line.substring(line.indexOf(":")+3, line.indexOf("]")); //comma-separated docIDs
-								    	currDocIDs = currDocIDs.replace(",", "");
-								    	String[] docIDs = currDocIDs.split(" ");
-								    	ArrayList<Integer> currDocIDsArr = new ArrayList<Integer>(); //array of existing docIDs for the word
-								    	for (int j = 0; j < docIDs.length; j++){
-								    		currDocIDsArr.add(Integer.parseInt(docIDs[j]));
-								    	}
-								    	/*//currProcBlock.put(currWord, currDocIDsArr);*/
-								    	
-								    	//merge docIDs and write to new file
-								    	Set<Integer> mergedIDsSet = new LinkedHashSet<Integer>(currDocIDsArr);
-								    	mergedIDsSet.addAll(currNewDocIDsArr);
-								    	ArrayList<Integer> mergedIDsArr = new ArrayList<Integer>(mergedIDsSet);
-								    	writer2.write(currWord + " : " + mergedIDsArr.toString() + System.lineSeparator());
-								    	exch = true;
+					for (int i = 0; i < currBlock; i++){
+						arrChunksReaders[i].close();
+					}
+				}
+				else{
+					for (int i = 0; i < currBlock; i++){
+						try {
+							//read and return the cursor to the beginning of the line
+							//(read line without reset somewhere after if needed)!
+							arrChunksReaders[i].mark(BufferSize);
+							String currLine = arrChunksReaders[i].readLine();
+							arrChunksReaders[i].reset();
+							if (!currLine.isEmpty()){
+								String currWordToBeCompared = currLine.substring(0, currLine.indexOf(":")-1);
+								if (currWordToBeOutput.compareTo(currWordToBeCompared) == 0){
+									currDocIDsToBeOutput = currLine.substring(currLine.indexOf(":")+3, currLine.indexOf("]")); //comma-separated docIDs
+									currDocIDsToBeOutput = currDocIDsToBeOutput.replace(",", "");
+							    	String[] docIDs = currDocIDsToBeOutput.split(" ");
+							    	ArrayList<Integer> currDocIDsArr = new ArrayList<Integer>(); //array of existing docIDs for the word
+							    	for (int j = 0; j < docIDs.length; j++){
+							    		currDocIDsArr.add(Integer.parseInt(docIDs[j]));
 							    	}
-							    	else if(!exch && currWord.compareTo(currNewWord) > 0){
-							    		//insert word in case it's not in there (check alphabetically) and write to new
-							    		writer2.write(currNewWord + ":" + currNewDocIDsArr.toString() + System.lineSeparator()); //new word
-							    		writer2.write(line + System.lineSeparator()); //old word moved to the next line
-							    		exch = true;
+							    	//if empty - fill, if not - merge
+							    	if (currIDsToBeOutputArr.isEmpty()){
+							    		for (int j : currDocIDsArr){
+							    			currIDsToBeOutputArr.add(j); //j.clone()
+							    		}
 							    	}
 							    	else {
-							    		//copy from old finInd to new
-							    		writer2.write(line + System.lineSeparator());
+							    		//ArrayList<Integer> newCurrIDsToBeOutputArr = new ArrayList<Integer>(currIDsToBeOutputArr);
+							    		//newCurrIDsToBeOutputArr.addAll(currDocIDsArr);
+							    		
+							    		//TODO: maybe check whether 2 arrays contain the same docIDs before merging them.
+							    		
+							    		//merge in a 'sorted res' way
+								    	Set<Integer> mergedIDsSet = new LinkedHashSet<Integer>(currIDsToBeOutputArr);
+								    	mergedIDsSet.addAll(currDocIDsArr);
+								    	currIDsToBeOutputArr = new ArrayList<Integer>(mergedIDsSet);
 							    	}
-						    	}
-						    }
-						} catch (FileNotFoundException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+							    	//currProcBlock.put(currWord, currDocIDsArr);}
+							    	
+							    	//move to the next line as current term in this block was successfully processed
+							    	arrChunksReaders[i].readLine();
+								}
+								/*
+								else{
+									if (currWordToBeCompared.compareTo(currWordToBeOutput) < 0){
+										currWordToBeOutput = currWordToBeCompared;
+									}
+								}
+								*/
+							}
+							/*
+							else {
+								//chunksParsed[i] = true;
+								if (i == currBlock -1 && currWordToBeOutput == ""){
+									finished = true;
+								}
+							}
+							*/
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
-					//del old finInd with curr ID
-					exch = false;
-					File toDel = new File("finalIndex" + currFinIndID + ".txt");
-					toDel.delete();
-					  currFinIndID = !currFinIndID;
-					  writer2.close();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+
 					}
-				  
-					
-						
-				  }
-				  
-				  
-				  
-				    
-			  }		  
-		  }
-			
-			
-			
-			
-/*		  
-		  //for (int i = 1; i <= currBlock; i++){
-			  FileInputStream inputStream = null;
-			  Scanner sc = null;
-			  try {
-			      try {
-					inputStream = new FileInputStream(file_name);
-				} catch (FileNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					//output and switch the values back to empty
+		    		writer.write(currWordToBeOutput + " : " + currIDsToBeOutputArr.toString() + System.lineSeparator()); //new word
+		    		currWordToBeOutput = "";
+		    		currDocIDsToBeOutput = "";
+		    		//clear arr of docIDs
+		    		currIDsToBeOutputArr.clear();
+		    		//currIDsToBeOutputArr = new ArrayList<Integer>();
+
 				}
-			      sc = new Scanner(inputStream, "UTF-8");
-			      // note that Scanner suppresses exceptions
-			      if (sc.ioException() != null) {
-			          try {
-						throw sc.ioException();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-			      }
-			  } finally {
-			      if (inputStream != null) {
-			          try {
-						inputStream.close();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-			      }
-			      if (sc != null) {
-			          sc.close();
-			      }
-			  }
-		  //}
-*/ 	  
-		  
-			  
-		  
-		  
+				//end of 'while(!finished)'. 
+			}
+			
+			
+			
+			//EOL (end of life) for the writer, and then - all the readers (presumably).
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		  return;
 	}
 	

@@ -122,7 +122,13 @@ public class tester {
 			boolean x2 = false;
 			System.out.println("true looks like: " + x1);
 			System.out.println("false looks like: " + x2);
+			
+			String currWordToBeOutput = "";
+			if (currWordToBeOutput.isEmpty()){
+				System.out.println("Yeah, it is empty.");
+			}
 			*/
+			
 			String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
 			System.out.println(timeStamp);
 			
