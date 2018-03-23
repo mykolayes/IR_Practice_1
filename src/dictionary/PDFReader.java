@@ -86,6 +86,7 @@ private static byte[] readFileAsBytes(String filePath) {
 	    FileWriter writer;
 		try {
 			writer = new FileWriter("chunk" + currBlock + ".txt");
+			
 			//StringBuilder sb = new StringBuilder();
 			//Integer wordID = 0;
 			for (Entry<String, ArrayList<Integer>> entry : wordsOneFile.entrySet()) {
@@ -115,16 +116,21 @@ private static byte[] readFileAsBytes(String filePath) {
 		  //ArrayList<File> textFilesNames = new ArrayList<File>();
 		  //getFilesNames(file_path, textFilesNames);
 		  //numOfDocs = textFilesNames.size();
-		  Integer approxSpaceUsed = 0;
+		  long approxSpaceUsed = 0;
 		  currBlock = 1;/*, currFile = 1*/
-		  Integer maxBlockSize = 300000; // 1 mb 1000000
+		  Integer maxBlockSize = 52428800; // 1 mb 1000000, !!!50 kb = 51200 b!!! 300000, 524288000 = 500 mb  = 50 mb
 		  TreeMap<String, ArrayList<Integer>> wordsOneFile = new TreeMap<String, ArrayList<Integer>>();
+		  char[] s_arr;
+		  int s_length;
+		  
+		  Stemmer stmmr = new Stemmer();
 		//2. Read all the files and create index.
 		  for (int i = 0; i < numOfDocs; i++){
 			  //file_name = file_path + textFilesNames.get(i);
 			  file_name = textFilesNames.get(i).getAbsolutePath();
-			  FileInputStream inputStream = null;
-			  Scanner sc = null;
+			  try (FileInputStream inputStream = new FileInputStream(file_name)){
+			  try (Scanner sc = new Scanner(inputStream, "UTF-8")) {
+			  /*
 			  try {
 			      try {
 					inputStream = new FileInputStream(file_name);
@@ -132,7 +138,8 @@ private static byte[] readFileAsBytes(String filePath) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-			      sc = new Scanner(inputStream, "UTF-8");
+				*/
+			      //sc = new Scanner(inputStream, "UTF-8");
 			      while (sc.hasNext()) {
 			          String word = sc.next();
 			          word = word.toLowerCase();
@@ -141,27 +148,36 @@ private static byte[] readFileAsBytes(String filePath) {
 				
 			          if (!word.isEmpty()){
 				          //+stem
-					    	Stemmer stmmr = new Stemmer();
-					    	char[] s_arr = word.toCharArray();
-					    	int s_length = word.length();
+			        	  stmmr = new Stemmer();
+					    	s_arr = word.toCharArray();
+					    	s_length = word.length();
 					    	stmmr.add(s_arr, s_length);
 					    	stmmr.stem();
 					    	word = stmmr.toString();
+					    	/*
+					    	writer.flush();
+					    	File checkChunkFile = new File("chunk" + currBlock + ".txt");
+							
+							if(checkChunkFile.exists()){
+								
+								approxSpaceUsed = checkChunkFile.length();
+							}
+							*/
 					    	if (approxSpaceUsed < maxBlockSize){ //6553600 1073741824
 			        	  //if (Runtime.getRuntime().maxMemory() - Runtime.getRuntime().totalMemory() > 100000000){ // > 100 mb ram for jvm left	  
 			        	  //check and add if not present
 			        		  if (!wordsOneFile.containsKey(word)){
 			        			  ArrayList<Integer> keys = new ArrayList<Integer>();
 			        			  keys.add(i);
-			        			  wordsOneFile.put(word, keys);
-			        			  approxSpaceUsed += 12;
+			        			  wordsOneFile.put(word, keys);	
+			        			  approxSpaceUsed += 3;//3; 0.00293
 			        		  }
 			        		  else {
 			        			  ArrayList<Integer> keys = wordsOneFile.get(word);
 			        			  if (!keys.contains(i)){
 			        				  keys.add(i);
 			        			  }
-			        			  approxSpaceUsed += 4;
+			        			  approxSpaceUsed += 1;//1; 0.00098
 			        		  }
 			        	  }
 			        	  else{
@@ -172,7 +188,11 @@ private static byte[] readFileAsBytes(String filePath) {
 			        		  
 			        		  approxSpaceUsed = 0;
 			        		  currBlock++;
-			        		  wordsOneFile.clear();
+			        		  //wordsOneFile.clear();
+			        		  wordsOneFile = new TreeMap<String, ArrayList<Integer>>();
+			        		  
+			        		  System.gc();
+			        		  
 			        		  //+add last word to the new treemap
 		        			  ArrayList<Integer> keys = new ArrayList<Integer>();
 		        			  keys.add(i);
@@ -180,12 +200,20 @@ private static byte[] readFileAsBytes(String filePath) {
 			        	  }
 			          }
 			      }
+			      //sc.close();
+			  }
+			  //inputStream.close();
+			  } catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}   
 			      
 			      
 			      
-			      
-			      
-			      
+			    /*  
 			      // note that Scanner suppresses exceptions
 			      if (sc.ioException() != null) {
 			          try {
@@ -208,6 +236,7 @@ private static byte[] readFileAsBytes(String filePath) {
 			          sc.close();
 			      }
 			  }
+			  */
 		  }
 		  outputChunk(wordsOneFile); //last part		  
 		  //now we need to create 1 index from separate files (chunks).

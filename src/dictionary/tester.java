@@ -1,18 +1,26 @@
 /*Yeshchenko Mykola, FI-2*/
 package dictionary;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.TreeMap;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Map.Entry;
 
 import dictionary.PDFReader;
 
 
 public class tester {
-	static String file_name = "", file_format = ".pdf", file_path = /*"src/books/"*/ /*"C:/Users/Sergey/Downloads/Dev/IR/gutenberg_txt/gutenberg_txt/gutenberg"*/ "C:/Users/Sergey/Downloads/Dev/IR/gutenberg_txt/gutenberg_txt/gutenberg/1/0/0/0/10007";
+	static String file_name = "", file_format = ".pdf", file_path = /*"src/books/"*/
+			"C:/Users/Sergey/Downloads/Dev/IR/gutenberg_txt/gutenberg_txt/gutenberg"
+			/*"C:/Users/Sergey/Downloads/Dev/IR/gutenberg_txt/gutenberg_txt/gutenberg/1/0/0/0/10007"*/;
+	
+	/*
 	static List<String> words_one_book;
 	//static ArrayList<String> words = new ArrayList<String>();
 	
@@ -24,7 +32,7 @@ public class tester {
 	static String toBeF;
 	static TreeMap<String, ArrayList<String>> TriGramIndex = new TreeMap<String, ArrayList<String>>();
 	static TreeMap<String, ArrayList<String>> PermutermIndex = new TreeMap<String, ArrayList<String>>();
-
+	 */
 	public static void main(String[] args) {
 		//wordAppearances = PDFReader.createDictionaryPositional(file_name,  file_format,  file_path,  words_one_book,  wordAppearances);
 		//wordAppearancesTwo = PDFReader.createDictionaryBiwords(file_name,  file_format,  file_path,  words_one_book,  wordAppearancesTwo);
@@ -34,7 +42,7 @@ public class tester {
 		PDFReader.outputToTxt(wordAppearances);
 		System.out.println("Output file created and filled.");
 		*/
-		try(Scanner scan = new Scanner(System.in)){		
+		//try(Scanner scan = new Scanner(System.in)){		
 			/*
 			System.out.println("Enter a word to be found: ");
 			String toBeFound = scan.next(); //e.g. "episode/affectionate"
@@ -135,9 +143,32 @@ public class tester {
 			ArrayList<File> textFilesNames = new ArrayList<File>();
 			PDFReader.getFilesNames(file_path, textFilesNames);
 			System.out.println("The amount of files to be indexed is: " + PDFReader.numOfDocs);
+			
+		    FileWriter writer;
+			try {
+				writer = new FileWriter("Stats" + ".txt");
+					writer.write("Time of beginning: " + timeStamp + System.lineSeparator());
+					writer.write("The amount of files to be indexed is: " + PDFReader.numOfDocs + System.lineSeparator());
+		    writer.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 			PDFReader.createTxtDictionary(textFilesNames);
 			timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
 			System.out.println(timeStamp);
+			
+			BufferedWriter writer2;
+			try {
+				writer2 = new BufferedWriter(new FileWriter("Stats" + ".txt", true));
+				writer2.write("Time of ending: " + timeStamp + System.lineSeparator());
+				writer2.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 			//System.out.println(System.currentTimeMillis());
 			//System.out.println(Runtime.getRuntime().maxMemory());
 			//System.out.println(Runtime.getRuntime().totalMemory());
@@ -198,7 +229,7 @@ public class tester {
 				System.out.println("Given words were not found.");
 			}
 			*/
-		}
+		//} //close the scanner
 		System.out.println("End of the testing program. Thank you!");
 		
 	}

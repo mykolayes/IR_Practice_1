@@ -1,0 +1,2 @@
+Time of beginning: 20180323_164608
+The amount of files to be indexed is: 18875
