@@ -9,7 +9,10 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,6 +25,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -34,6 +39,7 @@ import org.apache.pdfbox.text.PDFTextStripper;
 public class PDFReader {
 	static Integer numOfDocs;
 	static int currBlock;
+	static long maxBlockSize;
 	/*
 	public static String convertPDFToTxt(String filePath) {
         byte[] thePDFFileBytes = readFileAsBytes(filePath);
@@ -75,10 +81,23 @@ private static byte[] readFileAsBytes(String filePath) {
 	        if (file.isFile()) {
 	            files.add(file);
 	        } else if (file.isDirectory()) {
-	        	getFilesNames(file.getAbsolutePath(), files);
+					getFilesNames(file.getAbsolutePath(), files);
 	        }
 	    }
 	    numOfDocs = files.size();
+	    return;
+	}
+	
+	static void getFilesNamesTwo(String directoryName, ArrayList<Path> pathsx) {
+		try (Stream<Path> paths = Files.walk(Paths.get(directoryName))) {
+		    paths
+		        .filter(Files::isRegularFile)
+		        .forEach(currPath -> pathsx.add(currPath));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		numOfDocs = pathsx.size();
 	    return;
 	}
 	
@@ -101,7 +120,7 @@ private static byte[] readFileAsBytes(String filePath) {
 	}
 
 	
-	static void createTxtDictionary(ArrayList<File> textFilesNames){
+	static void createTxtDictionary(ArrayList<File> textFilesNames){ //ArrayList<File> textFilesNames
 		  String file_name = "", file_format = ".txt";
 		//1. Get names of all .txt files.
 		  /*
@@ -118,18 +137,115 @@ private static byte[] readFileAsBytes(String filePath) {
 		  //numOfDocs = textFilesNames.size();
 		  long approxSpaceUsed = 0;
 		  currBlock = 1;/*, currFile = 1*/
-		  Integer maxBlockSize = 52428800; // 1 mb 1000000, !!!50 kb = 51200 b!!! 300000, 524288000 = 500 mb  = 50 mb
+		  maxBlockSize = 5242880; // 1 mb 1000000, !!!50 kb = 51200 b!!! 300000, 524288000 = 500 mb, 52428800 = 50 mb, 524288000/2 = 262144000  //Integer
 		  TreeMap<String, ArrayList<Integer>> wordsOneFile = new TreeMap<String, ArrayList<Integer>>();
 		  char[] s_arr;
 		  int s_length;
+/*
+		  FileInputStream[] inpStrArr = new FileInputStream[numOfDocs];
+		  for (int i = 0; i < numOfDocs; i++){
+			  try {
+				inpStrArr[i] = new FileInputStream(textFilesNames.get(i).getAbsolutePath());
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		  }
+*/
+		  //Scanner[] scArr = new Scanner[numOfDocs];
 		  
 		  Stemmer stmmr = new Stemmer();
 		//2. Read all the files and create index.
 		  for (int i = 0; i < numOfDocs; i++){
+			  /*
+			  try (Stream<Path> paths = Files.walk(Paths.get("C:/Users/Nikolya/Downloads/IR/gutenberg_txt/gutenberg_txt/gutenberg/1/1/7/7"))) {
+				    paths
+				        .filter(Files::isRegularFile)
+				        .forEach(System.out::println);
+				}
+				*/
+			  /*
+			  List<Path> x = null;
+			  try {
+				 x = Files.walk(Paths.get("C:/Users/Nikolya/Downloads/IR/gutenberg_txt/gutenberg_txt/gutenberg/1/1/7/7"))
+				     .filter(Files::isRegularFile)
+				     .collect(Collectors.toList());
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			  */
 			  //file_name = file_path + textFilesNames.get(i);
+			  //String test = "C:\\Users\\Nikolya\\Downloads\\IR\\gutenberg_txt\\gutenberg_txt\\gutenberg\\1\\1\\7\\7\\11770\\11770-8.txt";
+			  //"C:\\Users\\Nikolya\\Downloads\\IR\\gutenberg_txt\\gutenberg_txt\\gutenberg\\1\\0\\0\\0\\10007\\10007.txt"
+			  //file_name = textFilesNames.get(i).getAbsolutePath();
 			  file_name = textFilesNames.get(i).getAbsolutePath();
+			  //System.out.println(test.compareTo(file_name));
+			  //Path path = Paths.get("C:\\Users\\Nikolya\\Downloads\\IR\\gutenberg_txt\\gutenberg_txt\\gutenberg\\1\\1\\7\\7\\11770\\11770-8.txt");
+			  //file_name = file_name.replace("\\", "\\\\");
+			  //String[] items= file_name.split("\\\\");
+			 // String test = String(items);
+			  //file_name = file_name.replaceAll(Pattern.quote("\\"), Matcher.quoteReplacement("\\\\"));
+			  //file_name = file_name.replace('\\', '/');
+			  //file_name = "file:///" + file_name;
+			  //URI file_name_uri = URI.create(file_name);
+			  //Path test = textFilesNames.get(i);
+			  //String test = x.get(i).toString();
+			  //File file = textFilesNames.get(i);
+			  
+			  //TODO: create an array of buffered readers instead.
+			  
 			  try (FileInputStream inputStream = new FileInputStream(file_name)){
-			  try (Scanner sc = new Scanner(inputStream, "UTF-8")) {
+				  //try(BufferedReader openedFile = new BufferedReader(new FileReader(file_name), 40000)){
+			  //try (BufferedReader openedFile = Files.newBufferedReader(Paths.get(file_name))) {
+			  try (Scanner sc = new Scanner(inputStream)) { //, "UTF-8"
+				  //try (Stream<String> linesStream = openedFile.lines()) {
+				//try (Stream<String> stream = Files.lines(Paths.get(file_name))) {
+					//stream.map
+					//stream.map(line -> line.split("\\s+"));
+					//stream.flatMap(Arrays::stream);
+					//stream.forEach(System.out::println);
+					
+			  
+			  //textFilesNames.get(i).toString().replaceAll("\\\\", "\\\\\\\\")
+			  //URI.create("file:///C:/tutorial/Java/JavaFX/Topic.txt");
+					//try (Stream<String> linesStream = Files.lines(Paths.get(test), StandardCharsets.UTF_8)){ //"finalIndextrue.txt"
+						//linesStream.forEach(System.out::println);
+				     //try (Stream<String> words = linesStream.flatMap(line -> Stream.of(line.split("\\s") ) )){
+			  /*
+				     try{
+				     Files.lines(Paths.get("finalIndextrue.txt"))
+			            .map(line -> line.split("\\s+")) // Stream<String[]>
+			            .flatMap(Arrays::stream) // Stream<String>
+			            .distinct() // Stream<String>
+			            .forEach(System.out::println);
+				*/     
+				     //Stream<String> wordsx= Stream.of(lines.);
+					
+				   // List<String> wordsOneLine = words.collect(Collectors.toList());
+					
+					//wordsOneLine.forEach(System.out::println);
+					//ArrayList<String> wordsOneLine = words.collect(Collectors.toCollection(ArrayList::new));
+				     
+					//String[] wordsOneLine = words.toArray(size -> new String[size]);
+					//Arrays.stream(wordsOneLine).forEach(System.out::println);
+					
+				     //words.forEach(action);
+					//String word = words.toString(); //does not work
+					
+			  
+			 // try {
+				  
+				//  try (Scanner sc = new Scanner(inpStrArr[i], "UTF-8")){
+					  //Scanner sc = scArr[i];
+				  while(sc.hasNext()){
+					  
+					  
+					  
+					  //try(Scanner input = new Scanner(file)){
+					  //input.useDelimiter("\\s"); //delimiter is one or more spaces
+
+					  //while(input.hasNext()){
 			  /*
 			  try {
 			      try {
@@ -140,77 +256,87 @@ private static byte[] readFileAsBytes(String filePath) {
 				}
 				*/
 			      //sc = new Scanner(inputStream, "UTF-8");
-			      while (sc.hasNext()) {
-			          String word = sc.next();
-			          word = word.toLowerCase();
-			          word = word.replaceAll("[^a-z ]+",""); //word = word.replaceAll("[^a-z '-]+","");
-
-				
-			          if (!word.isEmpty()){
-				          //+stem
-			        	  stmmr = new Stemmer();
-					    	s_arr = word.toCharArray();
-					    	s_length = word.length();
-					    	stmmr.add(s_arr, s_length);
-					    	stmmr.stem();
-					    	word = stmmr.toString();
-					    	/*
-					    	writer.flush();
-					    	File checkChunkFile = new File("chunk" + currBlock + ".txt");
-							
-							if(checkChunkFile.exists()){
+					  //String currLine = openedFile.readLine();;
+			      //while (currLine != null) {
+			    	  //String[] words = currLine.split("\\s+");
+			    	  //for (int j = 0; j < words.length; j++){
+				          //String word = words[j];
+						  //String word = input.next();
+					
+					//openedFile.
+					  	String word = sc.next();
+				          word = word.toLowerCase();
+				          word = word.replaceAll("[^a-z ]+",""); //word = word.replaceAll("[^a-z '-]+","");
+	
+					
+				          if (!word.isEmpty()){
+					          //+stem
+				        	  stmmr = new Stemmer();
+						    	s_arr = word.toCharArray();
+						    	s_length = word.length();
+						    	stmmr.add(s_arr, s_length);
+						    	stmmr.stem();
+						    	word = stmmr.toString();
+						    	/*
+						    	writer.flush();
+						    	File checkChunkFile = new File("chunk" + currBlock + ".txt");
 								
-								approxSpaceUsed = checkChunkFile.length();
-							}
-							*/
-					    	if (approxSpaceUsed < maxBlockSize){ //6553600 1073741824
-			        	  //if (Runtime.getRuntime().maxMemory() - Runtime.getRuntime().totalMemory() > 100000000){ // > 100 mb ram for jvm left	  
-			        	  //check and add if not present
-			        		  if (!wordsOneFile.containsKey(word)){
-			        			  ArrayList<Integer> keys = new ArrayList<Integer>();
+								if(checkChunkFile.exists()){
+									
+									approxSpaceUsed = checkChunkFile.length();
+								}
+								*/
+						    	if (approxSpaceUsed < maxBlockSize){ //6553600 1073741824
+				        	  //if (Runtime.getRuntime().maxMemory() - Runtime.getRuntime().totalMemory() > 100000000){ // > 100 mb ram for jvm left	  
+				        	  //check and add if not present
+				        		  if (!wordsOneFile.containsKey(word)){
+				        			  ArrayList<Integer> keys = new ArrayList<Integer>(50);
+				        			  keys.add(i);
+				        			  wordsOneFile.put(word, keys);	
+				        			  approxSpaceUsed += 3;//3; 0.00293
+				        		  }
+				        		  else {
+				        			  ArrayList<Integer> keys = wordsOneFile.get(word);
+				        			  if (!keys.contains(i)){
+				        				  keys.add(i);
+				        			  }
+				        			  approxSpaceUsed += 1;//1; 0.00098
+				        		  }
+				        	  }
+				        	  else{
+				        		//output to the next file and switch to a new treemap
+				        		  outputChunk(wordsOneFile);
+	
+				        		  //writer.write(entry.getKey() + " : " + entry.getValue().toString() + System.lineSeparator());
+				        		  
+				        		  approxSpaceUsed = 0;
+				        		  currBlock++;
+				        		  wordsOneFile.clear();
+				        		  //wordsOneFile = new TreeMap<String, ArrayList<Integer>>();
+				        		  
+				        		  //System.gc();
+				        		  
+				        		  //+add last word to the new treemap
+			        			  ArrayList<Integer> keys = new ArrayList<Integer>(50);
 			        			  keys.add(i);
-			        			  wordsOneFile.put(word, keys);	
-			        			  approxSpaceUsed += 3;//3; 0.00293
-			        		  }
-			        		  else {
-			        			  ArrayList<Integer> keys = wordsOneFile.get(word);
-			        			  if (!keys.contains(i)){
-			        				  keys.add(i);
-			        			  }
-			        			  approxSpaceUsed += 1;//1; 0.00098
-			        		  }
-			        	  }
-			        	  else{
-			        		//output to the next file and switch to a new treemap
-			        		  outputChunk(wordsOneFile);
-
-			        		  //writer.write(entry.getKey() + " : " + entry.getValue().toString() + System.lineSeparator());
-			        		  
-			        		  approxSpaceUsed = 0;
-			        		  currBlock++;
-			        		  //wordsOneFile.clear();
-			        		  wordsOneFile = new TreeMap<String, ArrayList<Integer>>();
-			        		  
-			        		  System.gc();
-			        		  
-			        		  //+add last word to the new treemap
-		        			  ArrayList<Integer> keys = new ArrayList<Integer>();
-		        			  keys.add(i);
-		        			  wordsOneFile.put(word, keys);
-			        	  }
-			          }
+			        			  wordsOneFile.put(word, keys);
+				        	  }
+				          }
+			    	  }
+			          //currLine = openedFile.readLine();
 			      }
 			      //sc.close();
 			  }
-			  //inputStream.close();
+				 //inpStrArr[i].close();
+			 /*
 			  } catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			} catch (IOException e) {
+			} */ catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}   
-			      
+			    
 			      
 			      
 			    /*  
@@ -238,6 +364,7 @@ private static byte[] readFileAsBytes(String filePath) {
 			  }
 			  */
 		  }
+	
 		  outputChunk(wordsOneFile); //last part		  
 		  //now we need to create 1 index from separate files (chunks).
 		  /*
@@ -247,12 +374,16 @@ private static byte[] readFileAsBytes(String filePath) {
 		  
 		  /* MERGE */
 		  
+		  //System.gc();
+		  
 		  //create arr for readers and open all the chunks
+
 		  BufferedReader[] arrChunksReaders = new BufferedReader[currBlock];
 		  
 		  //set buffer size here maybe so that we can backtrack to the beginning of the line easily (may be really long one)
 		  //maybe +2,147,483,647 is too much for my index. => 483647 - current size limit for one line of the index in chunks.
-		  int BufferSize = Integer.MAX_VALUE - 2147000000;
+		  //8192 is the default one.
+		  int BufferSize = 8192;//Integer.MAX_VALUE - 2147400000; // - 2147000000
 			  try {
 				  for (int i = 0; i < currBlock; i++){
 					arrChunksReaders[i] = new BufferedReader(new FileReader("chunk" + (i+1) + ".txt"), BufferSize);
@@ -332,7 +463,7 @@ private static byte[] readFileAsBytes(String filePath) {
 							arrChunksReaders[i].mark(BufferSize);
 							String currLine = arrChunksReaders[i].readLine();
 							arrChunksReaders[i].reset();
-							if (!currLine.isEmpty()){
+							if (currLine != null && !currLine.isEmpty()){ //TODO: currLine != null &&
 								String currWordToBeCompared = currLine.substring(0, currLine.indexOf(":")-1);
 								if (currWordToBeOutput.compareTo(currWordToBeCompared) == 0){
 									currDocIDsToBeOutput = currLine.substring(currLine.indexOf(":")+3, currLine.indexOf("]")); //comma-separated docIDs

@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -17,8 +18,12 @@ import dictionary.PDFReader;
 
 public class tester {
 	static String file_name = "", file_format = ".pdf", file_path = /*"src/books/"*/
-			"C:/Users/Sergey/Downloads/Dev/IR/gutenberg_txt/gutenberg_txt/gutenberg"
-			/*"C:/Users/Sergey/Downloads/Dev/IR/gutenberg_txt/gutenberg_txt/gutenberg/1/0/0/0/10007"*/;
+			/*"C:/Users/Sergey/Downloads/Dev/IR/gutenberg_txt/gutenberg_txt/gutenberg"*/
+			//"C:/Users/Nikolya/Downloads/IR/gutenberg_txt/gutenberg_txt/gutenberg/1/0/0/0/10007"
+			"C:/Users/Nikolya/Downloads/IR/gutenberg_txt"
+			
+			//"C:/Users/Nikolya/Downloads/IR/gutenberg_txt/gutenberg_txt/gutenberg/1/1/7/7" // /11775
+			;
 	
 	/*
 	static List<String> words_one_book;
@@ -143,26 +148,36 @@ public class tester {
 			ArrayList<File> textFilesNames = new ArrayList<File>();
 			PDFReader.getFilesNames(file_path, textFilesNames);
 			System.out.println("The amount of files to be indexed is: " + PDFReader.numOfDocs);
+			/*
+			ArrayList<Path> pathsx = new ArrayList<Path>();
+			PDFReader.getFilesNamesTwo(file_path, pathsx);
+			System.out.println("The amount of files to be indexed is: " + PDFReader.numOfDocs);
+			*/
 			
 		    FileWriter writer;
 			try {
 				writer = new FileWriter("Stats" + ".txt");
 					writer.write("Time of beginning: " + timeStamp + System.lineSeparator());
-					writer.write("The amount of files to be indexed is: " + PDFReader.numOfDocs + System.lineSeparator());
+					writer.write("The amount of files to be indexed is (bytes): " + PDFReader.numOfDocs + System.lineSeparator());
 		    writer.close();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			
-			PDFReader.createTxtDictionary(textFilesNames);
+			PDFReader.createTxtDictionary(textFilesNames); //textFilesNames
+			//PDFReader.createTxtDictionary(pathsx);
 			timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
 			System.out.println(timeStamp);
+			
+			File finIndex = new File("finalIndex.txt");
+			long indSize = finIndex.length();
 			
 			BufferedWriter writer2;
 			try {
 				writer2 = new BufferedWriter(new FileWriter("Stats" + ".txt", true));
 				writer2.write("Time of ending: " + timeStamp + System.lineSeparator());
+				writer2.write("Size of the final index file is: " + indSize);
 				writer2.close();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
