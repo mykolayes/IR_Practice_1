@@ -20,8 +20,8 @@ public class tester {
 	static String file_name = "", file_format = ".pdf", file_path = /*"src/books/"*/
 			/*"C:/Users/Sergey/Downloads/Dev/IR/gutenberg_txt/gutenberg_txt/gutenberg"*/
 			//"C:/Users/Nikolya/Downloads/IR/gutenberg_txt/gutenberg_txt/gutenberg/1/0/0/0/10007"
-			"C:/Users/Nikolya/Downloads/IR/gutenberg_txt"
-			
+			//"C:/Users/Nikolya/Downloads/IR/gutenberg_txt"
+			"C:/Users/Nikolya/Downloads/IR/gutenberg_txt/gutenberg_txt/gutenberg/1/0/0/0"
 			//"C:/Users/Nikolya/Downloads/IR/gutenberg_txt/gutenberg_txt/gutenberg/1/1/7/7" // /11775
 			;
 	
@@ -142,17 +142,13 @@ public class tester {
 			}
 			*/
 			
+		/*
 			String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
 			System.out.println(timeStamp);
 			
 			ArrayList<File> textFilesNames = new ArrayList<File>();
 			PDFReader.getFilesNames(file_path, textFilesNames);
 			System.out.println("The amount of files to be indexed is: " + PDFReader.numOfDocs);
-			/*
-			ArrayList<Path> pathsx = new ArrayList<Path>();
-			PDFReader.getFilesNamesTwo(file_path, pathsx);
-			System.out.println("The amount of files to be indexed is: " + PDFReader.numOfDocs);
-			*/
 			
 		    FileWriter writer;
 			try {
@@ -183,13 +179,13 @@ public class tester {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
-			//System.out.println(System.currentTimeMillis());
-			//System.out.println(Runtime.getRuntime().maxMemory());
-			//System.out.println(Runtime.getRuntime().totalMemory());
-			
-			
-			
+		*/
+			/**Practice 6 */
+		ArrayList<File> textFilesNames = new ArrayList<File>();
+		PDFReader.getFilesNames(file_path, textFilesNames);
+		System.out.println("The amount of files to be indexed is: " + PDFReader.numOfDocs);
+		PDFReader.createTxtDictionarySuppressed(textFilesNames); //textFilesNames
+		//PDFReader.createTxtDictionary(textFilesNames); //textFilesNames
 			
 			
 			

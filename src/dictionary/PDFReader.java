@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import static java.lang.Math.log;
 
 import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -540,6 +541,339 @@ private static byte[] readFileAsBytes(String filePath) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		  return;
+	}
+/*	
+	static void outputChunkSuppressed(TreeMap<String, ArrayList<Integer>> wordsOneFile){
+	    FileWriter writer;
+		try {
+			writer = new FileWriter("chunk_supp" + currBlock + ".txt");
+			
+			for (Entry<String, ArrayList<Integer>> entry : wordsOneFile.entrySet()) {
+				writer.write(entry.getKey() + " : " + entry.getValue().toString() + System.lineSeparator());
+	    }
+	    writer.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return;
+	}
+
+    private static byte[] createPositionVBC(int n) {
+        if (n == 0) {
+            return new byte[]{0};
+        }
+        int i = (int) (log(n) / log(128)) + 1;
+        byte[] rv = new byte[i];
+        int j = i - 1;
+        do {
+            rv[j--] = (byte) (n % 128);
+            n /= 128;
+        } while (j >= 0);
+        rv[i - 1] += 128;
+        return rv;
+    }
+ */   
+	static void outputDictAndIndexSuppressed(TreeMap<String, ArrayList<Integer>> wordsOneFile){
+	    FileWriter writer, writer2, writer3;
+	    String nextWord, nextPosInterval;
+	    byte[] posVBC;
+	    int wordIndex = 0;
+		try {
+			writer = new FileWriter("finDictSuppressed.txt");
+			writer2 = new FileWriter("finDictSuppressedPointers.txt");
+			writer3 = new FileWriter("finIndexSuppressed.txt");
+			//createPositionVBC(2097152);
+			for (Entry<String, ArrayList<Integer>> entry : wordsOneFile.entrySet()) {
+			//for (int i = 0; i < wordsOneFile.size(); i++){
+				//next = entry.getKey() + " : " + entry.getValue().toString();
+				nextWord = entry.getKey(); //  - space is unneeded as we maintain words' length in separate file.
+				writer.write(nextWord);
+				writer2.write(nextWord.length() + " "); 
+				writer3.write(wordIndex+":");
+				ArrayList<Integer> positions = entry.getValue();
+				//for (Integer position : entry.getValue()){
+				if (positions.size() > 1){
+					for (int i = 0; i < positions.size()-1; i++){
+						//posVBC = createPositionVBC(position);
+						nextPosInterval = Integer.toBinaryString(positions.get(i+1)-positions.get(i));
+						//nextPosInterval = Integer.toString(214577, 2);
+						//int amountOfEightBitSeq = nextPosInterval.length() / 7;
+						String allParts = "";
+						boolean firstPart = true;
+						while (nextPosInterval.length() > 7){						
+							String currPart = nextPosInterval.substring(nextPosInterval.length()-7,nextPosInterval.length());
+							nextPosInterval = nextPosInterval.substring(0,nextPosInterval.length()-7);
+							if (firstPart){
+								allParts = "1"+currPart;
+								firstPart = false;
+							}
+							else{
+								allParts = "0"+currPart+allParts;
+							}
+						}
+						allParts = nextPosInterval + allParts;
+						int neededLeadingZeros = 8 - nextPosInterval.length();
+						for (int j = 0; j < neededLeadingZeros; j++){
+							allParts = "0"+allParts;
+						}
+						if (firstPart){
+							allParts = allParts.substring(1, allParts.length());
+							allParts = "1"+allParts;
+							//firstPart = false
+						}
+						writer3.write(allParts);
+						/*
+						for (int j = 0; j < posVBC.length; j++){
+							writer3.write(posVBC[j]);
+						}
+						*/
+					}
+				}
+				else{
+					writer3.write("10000000"); //0-interval - this word was found only in 1 file total.
+				}
+				writer3.write(System.lineSeparator());
+				wordIndex++;
+	    }
+	    writer.close();
+	    writer2.close();
+	    writer3.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return;
+	}
+	
+	//@param ArrayList<File> textFilesNames - names of the files to be indexed.
+	static void createTxtDictionarySuppressed(ArrayList<File> textFilesNames){
+		  String file_name = "", file_format = ".txt";
+		
+		 //1. Initialise vars.
+		  long approxSpaceUsed = 0;
+		  currBlock = 1;
+		  maxBlockSize = 5242880; // 1 mb 1000000, !!!50 kb = 51200 b!!! 300000, 524288000 = 500 mb, 52428800 = 50 mb, 524288000/2 = 262144000  //Integer
+		  TreeMap<String, ArrayList<Integer>> wordsOneFile = new TreeMap<String, ArrayList<Integer>>();
+		  char[] s_arr;
+		  int s_length;
+		  
+		  Stemmer stmmr = new Stemmer();
+		//2. Read all the files and create index.
+		  for (int i = 0; i < numOfDocs; i++){
+
+			  file_name = textFilesNames.get(i).getAbsolutePath();
+
+			  try (FileInputStream inputStream = new FileInputStream(file_name)){
+
+			  try (Scanner sc = new Scanner(inputStream)) {
+				  while(sc.hasNext()){
+					  	String word = sc.next();
+				          word = word.toLowerCase();
+				          word = word.replaceAll("[^a-z ]+","");
+	
+					
+				          if (!word.isEmpty()){
+					          //+stem
+				        	  stmmr = new Stemmer();
+						    	s_arr = word.toCharArray();
+						    	s_length = word.length();
+						    	stmmr.add(s_arr, s_length);
+						    	stmmr.stem();
+						    	word = stmmr.toString();
+						    	//if (approxSpaceUsed < maxBlockSize){
+				        	  //check and add if not present
+				        		  if (!wordsOneFile.containsKey(word)){
+				        			  ArrayList<Integer> keys = new ArrayList<Integer>(50);
+				        			  keys.add(i);
+				        			  wordsOneFile.put(word, keys);	
+				        			  approxSpaceUsed += 3;
+				        		  }
+				        		  else {
+				        			  ArrayList<Integer> keys = wordsOneFile.get(word);
+				        			  if (!keys.contains(i)){
+				        				  keys.add(i);
+				        			  }
+				        			  approxSpaceUsed += 1;
+				        		  }
+				        	  //}
+						    	/*
+				        	  else{
+				        		//output to the next file and switch to a new treemap
+				        		  outputChunkSuppressed(wordsOneFile);
+	
+				        		  approxSpaceUsed = 0;
+				        		  currBlock++;
+				        		  wordsOneFile.clear();
+				        		  //wordsOneFile = new TreeMap<String, ArrayList<Integer>>();
+				        		  
+				        		  //System.gc();
+				        		  
+				        		  //+add last word to the new treemap
+			        			  ArrayList<Integer> keys = new ArrayList<Integer>(50);
+			        			  keys.add(i);
+			        			  wordsOneFile.put(word, keys);
+				        	  }
+				        	  */
+				          }
+			    	  }
+			      }
+			  } catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}   
+		  }
+	
+		  outputDictAndIndexSuppressed(wordsOneFile); //last part		  
+		  //now we need to create 1 index from separate files (chunks).
+		  
+		  /* MERGE */
+/*		  
+		  //System.gc();
+		  
+		  //create arr for readers and open all the chunks
+
+		  BufferedReader[] arrChunksReaders = new BufferedReader[currBlock];
+		  
+		  //set buffer size here maybe so that we can backtrack to the beginning of the line easily (may be really long one)
+		  //maybe +2,147,483,647 is too much for my index. => 483647 - current size limit for one line of the index in chunks.
+		  //8192 is the default one.
+		  int BufferSize = 8192;//Integer.MAX_VALUE - 2147400000; // - 2147000000
+			  try {
+				  for (int i = 0; i < currBlock; i++){
+					arrChunksReaders[i] = new BufferedReader(new FileReader("chunk_supp" + (i+1) + ".txt"), BufferSize);
+				  }
+
+	
+		 
+		  //create writer for finalIndex
+		  FileWriter writer;
+			try {
+				writer = new FileWriter("finalIndex_supp.txt");
+
+		
+			//start checking all the files line by line to:
+			//1) find the first term in alphabetical order
+			//2) combine all the found data about given word
+			//3) output it to the final index
+			//4) and go to next line (if exists) in those blocks, where we read the data
+			
+			//1)
+			//an array of bools to indicate that those blocks were parsed
+			//boolean[] chunksParsed = new boolean[currBlock];
+			boolean finished = false;
+			String currWordToBeOutput = "", currDocIDsToBeOutput = "";
+			ArrayList<Integer> currIDsToBeOutputArr = new ArrayList<Integer>();
+			
+			while (!finished){
+				//find next word to output
+				for (int i = 0; i < currBlock; i++){
+					try {
+						//read and return the cursor to the beginning of the line
+						arrChunksReaders[i].mark(BufferSize);
+						String currLine = arrChunksReaders[i].readLine();
+						arrChunksReaders[i].reset();
+						if (currLine != null && !currLine.isEmpty()){ //TODO: tmp check if null needed
+							
+							if (currWordToBeOutput.isEmpty()){
+								//initiate next word if it can not be compared yet (every first currWord after the prev. one was output + first in general)
+								currWordToBeOutput = currLine.substring(0, currLine.indexOf(":")-1);
+							}
+							else{
+								String currWordToBeCompared = currLine.substring(0, currLine.indexOf(":")-1);
+								if (currWordToBeCompared.compareTo(currWordToBeOutput) < 0){
+									currWordToBeOutput = currWordToBeCompared;
+								}
+							}
+						}
+						else {
+							if (i == currBlock -1 && currWordToBeOutput == ""){
+								finished = true;
+							}
+						}
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+							
+				}
+				//check whether there are words left in chunks (bool finished)
+				//if yes (finished == false) => output next word and make the currWord empty once again, so we can get the next term
+				//if no - close the writer and all the readers.
+				if (finished == true){
+					writer.close();
+					
+					for (int i = 0; i < currBlock; i++){
+						arrChunksReaders[i].close();
+					}
+				}
+				else{
+					for (int i = 0; i < currBlock; i++){
+						try {
+							//read and return the cursor to the beginning of the line
+							//(read line without reset somewhere after if needed)!
+							arrChunksReaders[i].mark(BufferSize);
+							String currLine = arrChunksReaders[i].readLine();
+							arrChunksReaders[i].reset();
+							if (currLine != null && !currLine.isEmpty()){
+								String currWordToBeCompared = currLine.substring(0, currLine.indexOf(":")-1);
+								if (currWordToBeOutput.compareTo(currWordToBeCompared) == 0){
+									currDocIDsToBeOutput = currLine.substring(currLine.indexOf(":")+3, currLine.indexOf("]")); //comma-separated docIDs
+									currDocIDsToBeOutput = currDocIDsToBeOutput.replace(",", "");
+							    	String[] docIDs = currDocIDsToBeOutput.split(" ");
+							    	ArrayList<Integer> currDocIDsArr = new ArrayList<Integer>(); //array of existing docIDs for the word
+							    	for (int j = 0; j < docIDs.length; j++){
+							    		currDocIDsArr.add(Integer.parseInt(docIDs[j]));
+							    	}
+							    	//if empty - fill, if not - merge
+							    	if (currIDsToBeOutputArr.isEmpty()){
+							    		for (int j : currDocIDsArr){
+							    			currIDsToBeOutputArr.add(j);
+							    		}
+							    	}
+							    	else {
+							    		
+							    		//TODO: maybe check whether 2 arrays contain the same docIDs before merging them.
+							    		
+							    		//merge in a 'sorted res' way
+								    	Set<Integer> mergedIDsSet = new LinkedHashSet<Integer>(currIDsToBeOutputArr);
+								    	mergedIDsSet.addAll(currDocIDsArr);
+								    	currIDsToBeOutputArr = new ArrayList<Integer>(mergedIDsSet);
+							    	}
+							    	
+							    	//move to the next line as current term in this block was successfully processed
+							    	arrChunksReaders[i].readLine();
+								}
+							}
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+
+					}
+					//output and switch the values back to empty
+		    		writer.write(currWordToBeOutput + " : " + currIDsToBeOutputArr.toString() + System.lineSeparator()); //new word
+		    		currWordToBeOutput = "";
+		    		currDocIDsToBeOutput = "";
+		    		//clear arr of docIDs
+		    		currIDsToBeOutputArr.clear();
+				}
+				//end of 'while(!finished)'. 
+			}
+			
+			
+			
+			//EOL (end of life) for the writer, and then - all the readers (presumably).
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			*/
 		  return;
 	}
 	
