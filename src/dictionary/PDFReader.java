@@ -16,20 +16,25 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import static java.lang.Math.log;
 
 import org.apache.pdfbox.io.IOUtils;
@@ -41,6 +46,11 @@ public class PDFReader {
 	static Integer numOfDocs;
 	static int currBlock;
 	static long maxBlockSize;
+	
+	static double titleWeight = 0.6;
+	static double bodyWeight = 0.4;
+	
+	static ArrayList<File> filesNew = new ArrayList<File>();
 	/*
 	public static String convertPDFToTxt(String filePath) {
         byte[] thePDFFileBytes = readFileAsBytes(filePath);
@@ -86,6 +96,22 @@ private static byte[] readFileAsBytes(String filePath) {
 	        }
 	    }
 	    numOfDocs = files.size();
+	    return;
+	}
+	
+	static void getFilesNamesNew(String directoryName) {
+	    File directory = new File(directoryName);
+
+	    // get all the files from a directory
+	    File[] fList = directory.listFiles();
+	    for (File file : fList) {
+	        if (file.isFile()) {
+	            filesNew.add(file);
+	        } else if (file.isDirectory()) {
+	        	getFilesNamesNew(file.getAbsolutePath());
+	        }
+	    }
+	    numOfDocs = filesNew.size();
 	    return;
 	}
 	
@@ -673,6 +699,267 @@ private static byte[] readFileAsBytes(String filePath) {
 			}
 			*/
 		  return;
+	}
+	
+	static void createTxtDictionaryZoned(){ //ArrayList<File> textFilesNames
+		  String file_name = "", file_format = ".txt";
+		
+		 //1. Initialise vars.
+		  long approxSpaceUsed = 0;
+		  currBlock = 1;
+		  maxBlockSize = 5242880; // 1 mb 1000000, !!!50 kb = 51200 b!!! 300000, 524288000 = 500 mb, 52428800 = 50 mb, 524288000/2 = 262144000  //Integer
+		  TreeMap<String, ArrayList<Integer>> wordsOneFile = new TreeMap<String, ArrayList<Integer>>();
+		  char[] s_arr;
+		  int s_length;
+		  
+		  Stemmer stmmrTitle = new Stemmer();
+		  Stemmer stmmr = new Stemmer();
+		//2. Read all the files and create index.
+		  for (int i = 0; i < numOfDocs; i++){
+
+			  file_name = filesNew.get(i).getAbsolutePath();
+
+			  try (FileInputStream inputStream = new FileInputStream(file_name)){
+				  
+				  
+			//Z1 - adding words from the title
+				  List<String> wordsCurrTitle = new ArrayList<String>();
+				  String currTitle = file_name.substring(file_name.lastIndexOf('\\')+1, file_name.lastIndexOf('.'));
+				  currTitle = currTitle.replaceAll("[^a-z ]+"," "); //"[^a-zA-Z \t\n'-]+"," "
+				  currTitle = currTitle.toLowerCase(); 
+				    //^ Locale.ENGLISH
+				    try {
+				       //words = text.split("\\s+");
+				       wordsCurrTitle = Arrays.asList(currTitle.split("\\s+"));
+				    } catch (PatternSyntaxException ex) {
+				        // 
+				    }
+				    for (String s : wordsCurrTitle) {
+				    	if (!s.isEmpty()){
+				    	  stmmrTitle = new Stemmer();
+					    	s_arr = s.toCharArray();
+					    	s_length = s.length();
+					    	stmmrTitle.add(s_arr, s_length);
+					    	stmmrTitle.stem();
+					    	s = stmmrTitle.toString();
+					    	s = s + "Z1";
+					    	
+			        		  if (!wordsOneFile.containsKey(s)){
+			        			  ArrayList<Integer> keys = new ArrayList<Integer>(50);
+			        			  keys.add(i);
+			        			  wordsOneFile.put(s, keys);	
+			        			  approxSpaceUsed += 3;
+			        		  }
+			        		  else {
+			        			  ArrayList<Integer> keys = wordsOneFile.get(s);
+			        			  if (!keys.contains(i)){
+			        				  keys.add(i);
+			        			  }
+			        			  approxSpaceUsed += 1;
+			        		  }
+				    	}
+				    }
+				  
+
+		    	
+
+			//Z2 - adding words in file content
+			  try (Scanner sc = new Scanner(inputStream)) {
+				  while(sc.hasNext()){
+					  	String word = sc.next();
+				          word = word.toLowerCase();
+				          word = word.replaceAll("[^a-z ]+","");
+	
+					
+				          if (!word.isEmpty()){
+					          //+stem
+				        	  stmmr = new Stemmer();
+						    	s_arr = word.toCharArray();
+						    	s_length = word.length();
+						    	stmmr.add(s_arr, s_length);
+						    	stmmr.stem();
+						    	word = stmmr.toString();
+						    	
+						    	word = word + "Z2";
+						    	
+						    	//if (approxSpaceUsed < maxBlockSize){
+				        	  //check and add if not present
+				        		  if (!wordsOneFile.containsKey(word)){
+				        			  ArrayList<Integer> keys = new ArrayList<Integer>(50);
+				        			  keys.add(i);
+				        			  wordsOneFile.put(word, keys);	
+				        			  approxSpaceUsed += 3;
+				        		  }
+				        		  else {
+				        			  ArrayList<Integer> keys = wordsOneFile.get(word);
+				        			  if (!keys.contains(i)){
+				        				  keys.add(i);
+				        			  }
+				        			  approxSpaceUsed += 1;
+				        		  }
+				        	  //}
+						    	/*
+				        	  else{
+				        		//output to the next file and switch to a new treemap
+				        		  outputChunkSuppressed(wordsOneFile);
+	
+				        		  approxSpaceUsed = 0;
+				        		  currBlock++;
+				        		  wordsOneFile.clear();
+				        		  //wordsOneFile = new TreeMap<String, ArrayList<Integer>>();
+				        		  
+				        		  //System.gc();
+				        		  
+				        		  //+add last word to the new treemap
+			        			  ArrayList<Integer> keys = new ArrayList<Integer>(50);
+			        			  keys.add(i);
+			        			  wordsOneFile.put(word, keys);
+				        	  }
+				        	  */
+				          }
+			    	  }
+			      }
+			  } catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}   
+		  }
+	
+		  outputChunk(wordsOneFile); //last part		  
+		  return;
+	}
+	
+	static TreeMap<String, ArrayList<Integer>> readIndexFromFile(){
+		TreeMap<String, ArrayList<Integer>> readIndex = new TreeMap<String, ArrayList<Integer>>();
+		
+		try (BufferedReader indexReader = new BufferedReader(new FileReader("chunk1" + ".txt"))){
+			
+
+		
+		String currWordToBeOutput = "", currDocIDsToBeOutput = "";
+		//ArrayList<Integer> currIDsToBeOutputArr = new ArrayList<Integer>();
+		
+		String currLine = indexReader.readLine();
+		while (currLine != null){// && !currLine.isEmpty()
+			currWordToBeOutput = currLine.substring(0, currLine.indexOf(":")-1);
+			currDocIDsToBeOutput = currLine.substring(currLine.indexOf(":")+3, currLine.indexOf("]")); //comma-separated docIDs
+			currDocIDsToBeOutput = currDocIDsToBeOutput.replace(",", "");
+	    	String[] docIDs = currDocIDsToBeOutput.split(" ");
+	    	ArrayList<Integer> currDocIDsArr = new ArrayList<Integer>(); //array of existing docIDs for the word
+	    	for (int j = 0; j < docIDs.length; j++){
+	    		currDocIDsArr.add(Integer.parseInt(docIDs[j]));
+	    	}
+	    	readIndex.put(currWordToBeOutput, currDocIDsArr);
+			currLine = indexReader.readLine();
+		}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return readIndex;
+	}
+	
+	static ArrayList<String> decodeFileNames(ArrayList<Integer> finalRes){
+		ArrayList<String> names = new ArrayList<String>();
+		for (int i = 0; i < finalRes.size(); i++){
+			names.add(filesNew.get(finalRes.get(i)).toString());
+		}
+		return names;
+	}
+	
+	static private <K,V extends Comparable<? super V>> SortedSet<Map.Entry<K,V>> entriesSortedByValues(Map<K,V> map) {
+	    SortedSet<Map.Entry<K,V>> sortedEntries = new TreeSet<Map.Entry<K,V>>(
+	        new Comparator<Map.Entry<K,V>>() {
+	            @Override public int compare(Map.Entry<K,V> e1, Map.Entry<K,V> e2) {
+	                int res = e2.getValue().compareTo(e1.getValue());
+	                return res != 0 ? res : 1;
+	            }
+	        }
+	    );
+	    sortedEntries.addAll(map.entrySet());
+	    return sortedEntries;
+	}
+	
+	static ArrayList<Integer> FindZoned(TreeMap<String, ArrayList<Integer>> wordAppearances, String key){ //ArrayList<String>
+		String toBeFound = key;
+		toBeFound = toBeFound.replaceAll("[^a-zA-Z ]+","");
+		toBeFound = toBeFound.toLowerCase(); 
+	    List<String> allWordsToBeFound = Arrays.asList(toBeFound.split("\\s+"));
+	   
+	 //Key - docID, Value - weight on [0-1] scale.
+	   TreeMap<Integer, Double> res = new TreeMap<Integer, Double>();
+	   ArrayList<Integer> finalRes = new ArrayList<Integer>();
+	   ArrayList<String> docNames = new ArrayList<String>();
+	   
+	   if (allWordsToBeFound.size() == 0){
+		   //return docNames;
+		   return finalRes;
+	   }
+	   
+	   double oneTitleWordWeight = titleWeight/allWordsToBeFound.size();
+	   double oneBodyWordWeight = bodyWeight/allWordsToBeFound.size();
+	   
+	   for (int i = 0; i < allWordsToBeFound.size(); i++){
+		   String s = allWordsToBeFound.get(i);
+	    	Stemmer stmmr = new Stemmer();
+	    	char[] s_arr = s.toCharArray();
+	    	int s_length = s.length();
+	    	stmmr.add(s_arr, s_length);
+	    	stmmr.stem();
+	    	s = stmmr.toString();
+	    	allWordsToBeFound.set(i, s);
+		}	
+		
+		for (int i = 0; i < allWordsToBeFound.size(); i++){
+			String currWordToBeFoundZ1 = allWordsToBeFound.get(i) + "Z1";			
+			String currWordToBeFoundZ2 = allWordsToBeFound.get(i) + "Z2";
+				//getting docIDs for given zones and analysing them
+			    	ArrayList<Integer> idsZ1 = wordAppearances.get(currWordToBeFoundZ1);
+			    	ArrayList<Integer> idsZ2 = wordAppearances.get(currWordToBeFoundZ2);
+			    	//Z1
+			    	if (idsZ1 != null){
+			    		for (int j = 0; j < idsZ1.size(); j++){
+			    			Integer currDocID = idsZ1.get(j);
+			    			if (!res.containsKey(currDocID)){
+			    				res.put(currDocID, oneTitleWordWeight);
+			    			}
+			    			else {
+			    				double changedCoeff = res.get(currDocID);
+			    				changedCoeff += oneTitleWordWeight;
+			    				res.put(currDocID, changedCoeff);
+			    			}
+			    		}			    		
+			    	}
+			    	//Z2
+			    	if (idsZ2 != null){
+			    		for (int j = 0; j < idsZ2.size(); j++){
+			    			Integer currDocID = idsZ2.get(j);
+			    			if (!res.containsKey(currDocID)){
+			    				res.put(currDocID, oneBodyWordWeight);
+			    			}
+			    			else {
+			    				double changedCoeff = res.get(currDocID);
+			    				changedCoeff += oneBodyWordWeight;
+			    				res.put(currDocID, changedCoeff);
+			    			}
+			    		}			    		
+			    	}
+		}
+		
+		SortedSet<Entry<Integer, Double>> sortedRes = entriesSortedByValues(res);
+		//sort by Keys and return (first 10) most relevant docIDs.
+		int maxRelevantCounter = 0;
+			for (Entry<Integer, Double> entry : sortedRes){
+				if (maxRelevantCounter > 9){
+					break;
+				}
+				finalRes.add(entry.getKey());
+				maxRelevantCounter++;
+			}
+			
+			//docNames = decodeFileNames(finalRes);
+		return finalRes;	
+			//return docNames;
 	}
 	
 	static TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> createDictionaryPositional(String file_name, String file_format, String file_path, List<String> words_one_book, TreeMap<String,TreeMap<Integer, ArrayList<Integer>>> wordAppearances) {

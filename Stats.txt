@@ -1,4 +1,2 @@
-Time of beginning: 20180324_201838
-The amount of files to be indexed is (bytes): 17644
-Time of ending: 20180324_222427
-Size of the final index file is: 4096522575
+Time of beginning: 20180406_112939
+The amount of files to be indexed is (bytes): 1802

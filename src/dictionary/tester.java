@@ -18,10 +18,11 @@ import dictionary.PDFReader;
 
 public class tester {
 	static String file_name = "", file_format = ".pdf", file_path = /*"src/books/"*/
-			/*"C:/Users/Sergey/Downloads/Dev/IR/gutenberg_txt/gutenberg_txt/gutenberg"*/
+			"C:/Users/Sergey/Downloads/Dev/IR/gutenberg_txt/gutenberg_txt/gutenberg/1/0/0/0/10007"
+			//"C:/Users/Sergey/Downloads/Dev/IR/gutenberg_txt/gutenberg_txt/gutenberg/1/0"
 			//"C:/Users/Nikolya/Downloads/IR/gutenberg_txt/gutenberg_txt/gutenberg/1/0/0/0/10007"
 			//"C:/Users/Nikolya/Downloads/IR/gutenberg_txt"
-			"C:/Users/Nikolya/Downloads/IR/gutenberg_txt/gutenberg_txt/gutenberg/1/0/0/0"
+			//"C:/Users/Nikolya/Downloads/IR/gutenberg_txt/gutenberg_txt/gutenberg/1/0/0/0"
 			//"C:/Users/Nikolya/Downloads/IR/gutenberg_txt/gutenberg_txt/gutenberg/1/1/7/7" // /11775
 			;
 	
@@ -141,8 +142,8 @@ public class tester {
 				System.out.println("Yeah, it is empty.");
 			}
 			*/
-			
-		/*
+			/*
+		
 			String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
 			System.out.println(timeStamp);
 			
@@ -181,14 +182,24 @@ public class tester {
 			}
 		*/
 			/**Practice 6 */
+		/*
 		ArrayList<File> textFilesNames = new ArrayList<File>();
 		PDFReader.getFilesNames(file_path, textFilesNames);
 		System.out.println("The amount of files to be indexed is: " + PDFReader.numOfDocs);
 		PDFReader.createTxtDictionarySuppressed(textFilesNames); //textFilesNames
+		
 		//PDFReader.createTxtDictionary(textFilesNames); //textFilesNames
-			
-			
-			
+			*/
+		/**Practice 7 */
+		
+		//ArrayList<File> textFilesNames = new ArrayList<File>();
+		PDFReader.getFilesNamesNew(file_path); //, textFilesNames
+		System.out.println("The amount of files to be indexed is: " + PDFReader.numOfDocs);
+		PDFReader.createTxtDictionaryZoned(); //textFilesNames
+		TreeMap<String, ArrayList<Integer>> myIndex = new TreeMap<String, ArrayList<Integer>>();
+		myIndex = PDFReader.readIndexFromFile();
+		ArrayList<Integer> res = PDFReader.FindZoned(myIndex, "heartbeating");
+		System.out.println(res);
 			
 			
 			
