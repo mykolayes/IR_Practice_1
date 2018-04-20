@@ -198,7 +198,7 @@ public class tester {
 		PDFReader.createTxtDictionaryZoned(); //textFilesNames
 		TreeMap<String, ArrayList<Integer>> myIndex = new TreeMap<String, ArrayList<Integer>>();
 		myIndex = PDFReader.readIndexFromFile();
-		ArrayList<Integer> res = PDFReader.FindZoned(myIndex, "heartbeating");
+		ArrayList<Integer> res = PDFReader.FindZoned(myIndex, "heartbeating arcana");
 		System.out.println(res);
 			
 			
