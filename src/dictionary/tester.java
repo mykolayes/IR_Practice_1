@@ -191,7 +191,7 @@ public class tester {
 		//PDFReader.createTxtDictionary(textFilesNames); //textFilesNames
 			*/
 		/**Practice 7 */
-		
+		/*
 		//ArrayList<File> textFilesNames = new ArrayList<File>();
 		PDFReader.getFilesNamesNew(file_path); //, textFilesNames
 		System.out.println("The amount of files to be indexed is: " + PDFReader.numOfDocs);
@@ -200,9 +200,12 @@ public class tester {
 		myIndex = PDFReader.readIndexFromFile();
 		ArrayList<Integer> res = PDFReader.FindZoned(myIndex, "heartbeating arcana");
 		System.out.println(res);
-			
-			
-			
+		*/	
+		/**Practice 11 */	
+		PDFReader.indexXML();
+		TreeMap<String, ArrayList<Integer>> XMLIndex = PDFReader.readXMLFromFile();
+		ArrayList<Integer> res = PDFReader.FindXML(XMLIndex, "company salary");
+		System.out.println(res);
 			 /*
 			ArrayList<Integer> foundIn = PDFReader.Find(wordAppearances, toBeFound);
 			if (!foundIn.isEmpty()){

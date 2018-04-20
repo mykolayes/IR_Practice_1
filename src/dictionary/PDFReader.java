@@ -35,6 +35,13 @@ import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
 import static java.lang.Math.log;
 
 import org.apache.pdfbox.io.IOUtils;
@@ -45,10 +52,16 @@ import org.apache.pdfbox.text.PDFTextStripper;
 public class PDFReader {
 	static Integer numOfDocs;
 	static int currBlock;
+	static int currDoc;
 	static long maxBlockSize;
 	
 	static double titleWeight = 0.6;
 	static double bodyWeight = 0.4;
+	
+	static double XMLrootWeight = 0.4;
+	static double XMLnodeWeight = 0.2;		
+	static double XMLnodeattrWeight = 0.2;
+	static double XMLnodevalueWeight = 0.2;
 	
 	static ArrayList<File> filesNew = new ArrayList<File>();
 	/*
@@ -940,6 +953,281 @@ private static byte[] readFileAsBytes(String filePath) {
 			    			else {
 			    				double changedCoeff = res.get(currDocID);
 			    				changedCoeff += oneBodyWordWeight;
+			    				res.put(currDocID, changedCoeff);
+			    			}
+			    		}			    		
+			    	}
+		}
+		
+		SortedSet<Entry<Integer, Double>> sortedRes = entriesSortedByValues(res);
+		//sort by Keys and return (first 10) most relevant docIDs.
+		int maxRelevantCounter = 0;
+			for (Entry<Integer, Double> entry : sortedRes){
+				if (maxRelevantCounter > 9){
+					break;
+				}
+				finalRes.add(entry.getKey());
+				maxRelevantCounter++;
+			}
+			
+			//docNames = decodeFileNames(finalRes);
+		return finalRes;	
+			//return docNames;
+	}
+	
+	static void indexXML(){
+		TreeMap<String, ArrayList<Integer>> wordsOneFile = new TreeMap<String, ArrayList<Integer>>();
+		   try {
+				File file = new File("C:/Users/Sergey/Downloads/Dev/IR/gutenberg_txt/gutenberg_txt/gutenberg/1/0/0/0/10007/staff.xml");
+				currDoc = 1;
+				ArrayList<Integer> tmp = new ArrayList<Integer>();
+				tmp.add(currDoc);
+				DocumentBuilder dBuilder = DocumentBuilderFactory.newInstance()
+			                             .newDocumentBuilder();
+
+				Document doc = dBuilder.parse(file);
+
+				//System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
+				//wordsOneFile.put(doc.getDocumentElement().getNodeName() + "XMLroot", tmp);
+				addToXMLIndex(doc.getDocumentElement().getNodeName(), "XMLroot", wordsOneFile);
+				if (doc.hasChildNodes()) {
+
+					indexNode(doc.getChildNodes(), wordsOneFile);
+
+				}
+
+			    } catch (Exception e) {
+			    	System.out.println(e.getMessage());
+			    }
+		   outputXML(wordsOneFile);
+	}
+	private static void indexNode(NodeList nodeList, TreeMap<String, ArrayList<Integer>> wordsOneFile) {
+
+	    for (int count = 0; count < nodeList.getLength(); count++) {
+
+		Node tempNode = nodeList.item(count);
+
+		// make sure it's element node.
+		if (tempNode.getNodeType() == Node.ELEMENT_NODE) {
+			ArrayList<Integer> tmp = new ArrayList<Integer>();
+			// get node name and value
+			//System.out.println("\nNode Name =" + tempNode.getNodeName() + " [OPEN]");
+			//wordsOneFile.put(tempNode.getNodeName() + "XMLnode", tmp);
+			addToXMLIndex(tempNode.getNodeName(), "XMLnode", wordsOneFile);
+			//System.out.println("Node Value =" + tempNode.getTextContent());
+			String str = tempNode.getTextContent();
+			//List<String> wordsCurrTitle = new ArrayList<String>();
+		    List<String> allWordsToBeFound = Arrays.asList(str.split("\\s+"));
+		    for (String s : allWordsToBeFound) {
+		    	addToXMLIndex(s, "XMLnodevalue", wordsOneFile);
+		    }
+			//wordsOneFile.put(tempNode.getTextContent() + "XMLnodevalue", tmp);
+			if (tempNode.hasAttributes()) {
+
+				// get attributes names and values
+				NamedNodeMap nodeMap = tempNode.getAttributes();
+
+				for (int i = 0; i < nodeMap.getLength(); i++) {
+
+					Node node = nodeMap.item(i);
+					//System.out.println("attr name : " + node.getNodeName());
+					//wordsOneFile.put(node.getNodeName() + "XMLnodeattr", tmp);
+					addToXMLIndex(node.getNodeName(), "XMLnodeattr", wordsOneFile);
+					//System.out.println("attr value : " + node.getNodeValue());
+					//wordsOneFile.put(node.getNodeValue() + "XMLnodevalue", tmp);
+					addToXMLIndex(node.getNodeValue(), "XMLnodevalue", wordsOneFile);
+
+				}
+
+			}
+
+			if (tempNode.hasChildNodes()) {
+
+				// loop again if has child nodes
+				indexNode(tempNode.getChildNodes(), wordsOneFile);
+
+			}
+
+			//System.out.println("Node Name =" + tempNode.getNodeName() + " [CLOSE]");
+
+		}
+
+	    }
+
+	  }
+	
+	private static void addToXMLIndex(String s, String zone, TreeMap<String, ArrayList<Integer>> wordsOneFile){
+		  s = s.replaceAll("[^a-z ]+"," "); //"[^a-zA-Z \t\n'-]+"," "
+		  s = s.toLowerCase(); 
+		    //^ Locale.ENGLISH
+
+
+		    	if (!s.isEmpty()){
+		    	  Stemmer stmmrTitle = new Stemmer();
+			    	char[] s_arr = s.toCharArray();
+			    	int s_length = s.length();
+			    	stmmrTitle.add(s_arr, s_length);
+			    	stmmrTitle.stem();
+			    	s = stmmrTitle.toString();
+			    	s = s + zone;
+			    	
+	        		  if (!wordsOneFile.containsKey(s)){
+	        			  ArrayList<Integer> keys = new ArrayList<Integer>(50);
+	        			  keys.add(currDoc);
+	        			  wordsOneFile.put(s, keys);	
+	        			  //approxSpaceUsed += 3;
+	        		  }
+	        		  else {
+	        			  ArrayList<Integer> keys = wordsOneFile.get(s);
+	        			  if (!keys.contains(currDoc)){
+	        				  keys.add(currDoc);
+	        			  }
+	        			  //approxSpaceUsed += 1;
+	        		  }
+		    	}
+		    
+		    	return;
+	}
+	
+	static void outputXML(TreeMap<String, ArrayList<Integer>> wordsOneFile){
+	    FileWriter writer;
+		try {
+			writer = new FileWriter("XMLIndex.txt");
+			
+			for (Entry<String, ArrayList<Integer>> entry : wordsOneFile.entrySet()) {
+				writer.write(entry.getKey() + " : " + entry.getValue().toString() + System.lineSeparator());
+	    }
+	    writer.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return;
+	}
+	static TreeMap<String, ArrayList<Integer>> readXMLFromFile(){
+		TreeMap<String, ArrayList<Integer>> readIndex = new TreeMap<String, ArrayList<Integer>>();
+		
+		try (BufferedReader indexReader = new BufferedReader(new FileReader("XMLIndex" + ".txt"))){
+			
+
+		
+		String currWordToBeOutput = "", currDocIDsToBeOutput = "";
+		//ArrayList<Integer> currIDsToBeOutputArr = new ArrayList<Integer>();
+		
+		String currLine = indexReader.readLine();
+		while (currLine != null){// && !currLine.isEmpty()
+			currWordToBeOutput = currLine.substring(0, currLine.indexOf(":")-1);
+			currDocIDsToBeOutput = currLine.substring(currLine.indexOf(":")+3, currLine.indexOf("]")); //comma-separated docIDs
+			currDocIDsToBeOutput = currDocIDsToBeOutput.replace(",", "");
+	    	String[] docIDs = currDocIDsToBeOutput.split(" ");
+	    	ArrayList<Integer> currDocIDsArr = new ArrayList<Integer>(); //array of existing docIDs for the word
+	    	for (int j = 0; j < docIDs.length; j++){
+	    		currDocIDsArr.add(Integer.parseInt(docIDs[j]));
+	    	}
+	    	readIndex.put(currWordToBeOutput, currDocIDsArr);
+			currLine = indexReader.readLine();
+		}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return readIndex;
+	}
+	
+	static ArrayList<Integer> FindXML(TreeMap<String, ArrayList<Integer>> wordAppearances, String key){ //ArrayList<String>
+		String toBeFound = key;
+		toBeFound = toBeFound.replaceAll("[^a-zA-Z ]+","");
+		toBeFound = toBeFound.toLowerCase(); 
+	    List<String> allWordsToBeFound = Arrays.asList(toBeFound.split("\\s+"));
+	   
+	 //Key - docID, Value - weight on [0-1] scale.
+	   TreeMap<Integer, Double> res = new TreeMap<Integer, Double>();
+	   ArrayList<Integer> finalRes = new ArrayList<Integer>();
+	   ArrayList<String> docNames = new ArrayList<String>();
+	   
+	   if (allWordsToBeFound.size() == 0){
+		   //return docNames;
+		   return finalRes;
+	   }
+	   
+	   double oneXMLrootWordWeight = XMLrootWeight/allWordsToBeFound.size();
+	   double oneXMLnodeWordWeight = XMLnodeWeight/allWordsToBeFound.size();
+	   double oneXMLnodeattrWordWeight = XMLnodeattrWeight/allWordsToBeFound.size();
+	   double oneXMLnodevalueWordWeight = XMLnodevalueWeight/allWordsToBeFound.size();
+	   
+	   for (int i = 0; i < allWordsToBeFound.size(); i++){
+		   String s = allWordsToBeFound.get(i);
+	    	Stemmer stmmr = new Stemmer();
+	    	char[] s_arr = s.toCharArray();
+	    	int s_length = s.length();
+	    	stmmr.add(s_arr, s_length);
+	    	stmmr.stem();
+	    	s = stmmr.toString();
+	    	allWordsToBeFound.set(i, s);
+		}	
+		
+		for (int i = 0; i < allWordsToBeFound.size(); i++){
+			String currWordToBeFoundZ1 = allWordsToBeFound.get(i) + "XMLroot";			
+			String currWordToBeFoundZ2 = allWordsToBeFound.get(i) + "XMLnode";
+			String currWordToBeFoundZ3 = allWordsToBeFound.get(i) + "XMLnodeattr";
+			String currWordToBeFoundZ4 = allWordsToBeFound.get(i) + "XMLnodevalue";
+				//getting docIDs for given zones and analysing them
+			    	ArrayList<Integer> idsZ1 = wordAppearances.get(currWordToBeFoundZ1);
+			    	ArrayList<Integer> idsZ2 = wordAppearances.get(currWordToBeFoundZ2);
+			    	ArrayList<Integer> idsZ3 = wordAppearances.get(currWordToBeFoundZ3);
+			    	ArrayList<Integer> idsZ4 = wordAppearances.get(currWordToBeFoundZ4);
+			    	//Z1
+			    	if (idsZ1 != null){
+			    		for (int j = 0; j < idsZ1.size(); j++){
+			    			Integer currDocID = idsZ1.get(j);
+			    			if (!res.containsKey(currDocID)){
+			    				res.put(currDocID, oneXMLrootWordWeight);
+			    			}
+			    			else {
+			    				double changedCoeff = res.get(currDocID);
+			    				changedCoeff += oneXMLrootWordWeight;
+			    				res.put(currDocID, changedCoeff);
+			    			}
+			    		}			    		
+			    	}
+			    	//Z2
+			    	if (idsZ2 != null){
+			    		for (int j = 0; j < idsZ2.size(); j++){
+			    			Integer currDocID = idsZ2.get(j);
+			    			if (!res.containsKey(currDocID)){
+			    				res.put(currDocID, oneXMLnodeWordWeight);
+			    			}
+			    			else {
+			    				double changedCoeff = res.get(currDocID);
+			    				changedCoeff += oneXMLnodeWordWeight;
+			    				res.put(currDocID, changedCoeff);
+			    			}
+			    		}			    		
+			    	}
+			    	//Z3
+			    	if (idsZ3 != null){
+			    		for (int j = 0; j < idsZ3.size(); j++){
+			    			Integer currDocID = idsZ3.get(j);
+			    			if (!res.containsKey(currDocID)){
+			    				res.put(currDocID, oneXMLnodeattrWordWeight);
+			    			}
+			    			else {
+			    				double changedCoeff = res.get(currDocID);
+			    				changedCoeff += oneXMLnodeattrWordWeight;
+			    				res.put(currDocID, changedCoeff);
+			    			}
+			    		}			    		
+			    	}
+			    	//Z4
+			    	if (idsZ4 != null){
+			    		for (int j = 0; j < idsZ4.size(); j++){
+			    			Integer currDocID = idsZ4.get(j);
+			    			if (!res.containsKey(currDocID)){
+			    				res.put(currDocID, oneXMLnodevalueWordWeight);
+			    			}
+			    			else {
+			    				double changedCoeff = res.get(currDocID);
+			    				changedCoeff += oneXMLnodevalueWordWeight;
 			    				res.put(currDocID, changedCoeff);
 			    			}
 			    		}			    		
