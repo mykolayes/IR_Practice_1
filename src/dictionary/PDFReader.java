@@ -1007,7 +1007,7 @@ private static byte[] readFileAsBytes(String filePath) {
 
 		Node tempNode = nodeList.item(count);
 
-		// make sure it's element node.
+		// element node
 		if (tempNode.getNodeType() == Node.ELEMENT_NODE) {
 			ArrayList<Integer> tmp = new ArrayList<Integer>();
 			// get node name and value
